@@ -1,0 +1,6 @@
+{
+  "name": "Marketplace de Tecnologia",
+  "description": "Uma plataforma de marketplace moderna para itens de tecnologia como Teclados, Câmeras, Smartwatches e Microfones, com busca avançada, filtros, avaliações e salvamento de favoritos.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
