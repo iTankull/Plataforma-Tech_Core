@@ -45,10 +45,10 @@ export default function CartDrawer({
             animate={{ x: 0 }}
             exit={{ x: '100%' }}
             transition={{ type: 'tween', duration: 0.3 }}
-            className="fixed top-0 right-0 bottom-0 w-full sm:w-[450px] bg-black border-l-2 border-white z-50 flex flex-col h-full text-white"
+            className="fixed top-0 right-0 bottom-0 w-full sm:w-[450px] bg-bg-card border-l-2 border-border-main z-50 flex flex-col h-full text-text-main"
           >
             {/* Header */}
-            <div className="p-6 border-b border-white/10 flex items-center justify-between">
+            <div className="p-6 border-b border-border-subtle flex items-center justify-between">
               <div className="flex items-center gap-2">
                 <ShoppingBag className="w-5 h-5 text-[#FF3E00]" />
                 <h3 className="font-sans font-black text-lg tracking-tight uppercase">SEU CARRINHO</h3>
@@ -66,31 +66,31 @@ export default function CartDrawer({
             <div className="flex-1 overflow-y-auto p-6 space-y-4 custom-scrollbar">
               {cart.length === 0 ? (
                 <div className="text-center py-20 flex flex-col items-center justify-center h-full">
-                  <ShoppingBag className="w-12 h-12 text-white/10 mb-4" />
+                  <ShoppingBag className="w-12 h-12 text-text-dim/20 mb-4" />
                   <h4 className="font-sans font-black tracking-widest text-xs uppercase mb-2">CARRINHO VAZIO</h4>
-                  <p className="text-white/40 font-mono text-[10px] leading-relaxed max-w-[240px]">
-                    Navegue pelos produtos e adicione revendas com 45% OFF para finalizar sua aquisição.
+                  <p className="text-text-muted font-mono text-[10px] leading-relaxed max-w-[240px]">
+                    Navegue pelos produtos e aproveite os 45% OFF!
                   </p>
                 </div>
               ) : (
                 cart.map((item) => (
-                  <div key={item.product.id} className="flex gap-4 border-b border-white/5 pb-4 last:border-0">
+                  <div key={item.product.id} className="flex gap-4 border-b border-border-very-subtle pb-4 last:border-0">
                     <img
                       src={item.product.image}
                       alt={item.product.name}
-                      className="w-16 h-16 object-cover border border-white/10 shrink-0"
+                      className="w-16 h-16 object-cover border border-border-subtle shrink-0"
                     />
                     <div className="flex-1 min-w-0">
                       <div className="flex items-start justify-between gap-2">
                         <div>
-                          <span className="text-[8px] font-black bg-white/10 text-white/50 px-1.5 py-0.5 rounded-none uppercase">
+                          <span className="text-[8px] font-black bg-bg-nested text-text-muted px-1.5 py-0.5 rounded-none uppercase">
                             {item.product.category}
                           </span>
-                          <h4 className="text-xs font-black text-white truncate uppercase mt-1 leading-tight">{item.product.name}</h4>
+                          <h4 className="text-xs font-black text-text-main truncate uppercase mt-1 leading-tight">{item.product.name}</h4>
                         </div>
                         <button
                           onClick={() => onRemoveItem(item.product.id)}
-                          className="text-white/40 hover:text-[#FF3E00] transition-colors"
+                          className="text-text-dim hover:text-[#FF3E00] transition-colors"
                           title="Remover Item"
                         >
                           <Trash2 className="w-3.5 h-3.5" />
@@ -99,27 +99,27 @@ export default function CartDrawer({
 
                       {/* Pricing with flat discount */}
                       <div className="flex items-center gap-2 mt-2">
-                        <span className="text-[10px] text-white/40 line-through font-mono">
+                        <span className="text-[10px] text-text-dim line-through font-mono">
                           R$ {item.product.price.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
                         </span>
-                        <span className="text-xs font-bold text-white font-mono">
+                        <span className="text-xs font-bold text-text-main font-mono">
                           R$ {(item.product.price * 0.55).toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
                         </span>
                       </div>
 
                       {/* Quantity Selector */}
                       <div className="flex items-center mt-2.5">
-                        <div className="flex items-center border border-white/15 bg-[#111]">
+                        <div className="flex items-center border border-border-subtle bg-bg-nested">
                           <button
                             onClick={() => onUpdateQuantity(item.product.id, item.quantity - 1)}
-                            className="px-2 py-0.5 hover:bg-white/5 text-xs font-bold"
+                            className="px-2 py-0.5 hover:bg-bg-card text-xs font-bold"
                           >
                             -
                           </button>
                           <span className="px-3 font-mono text-xs font-bold">{item.quantity}</span>
                           <button
                             onClick={() => onUpdateQuantity(item.product.id, item.quantity + 1)}
-                            className="px-2 py-0.5 hover:bg-white/5 text-xs font-bold"
+                            className="px-2 py-0.5 hover:bg-bg-card text-xs font-bold"
                           >
                             +
                           </button>
@@ -133,9 +133,9 @@ export default function CartDrawer({
 
             {/* Calculations & Action Buttons */}
             {cart.length > 0 && (
-              <div className="p-6 border-t border-white/10 bg-black space-y-4 font-mono">
+              <div className="p-6 border-t border-border-subtle bg-bg-card space-y-4 font-mono">
                 <div className="space-y-2 text-xs">
-                  <div className="flex justify-between text-white/40">
+                  <div className="flex justify-between text-text-dim">
                     <span>SOMA ORIGINAL DE TABELA:</span>
                     <span>R$ {subtotal.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}</span>
                   </div>
@@ -143,7 +143,7 @@ export default function CartDrawer({
                     <span>DESCONTO PADRÃO (45% OFF):</span>
                     <span>- R$ {discountAmount.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}</span>
                   </div>
-                  <div className="border-t border-white/5 pt-2 flex justify-between text-sm font-bold text-white">
+                  <div className="border-t border-border-very-subtle pt-2 flex justify-between text-sm font-bold text-text-main">
                     <span className="uppercase tracking-widest text-[#FF3E00] font-black text-[10px]">VALOR FINAL:</span>
                     <span>R$ {totalWithDiscount.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}</span>
                   </div>
@@ -163,7 +163,7 @@ export default function CartDrawer({
                   
                   <button
                     onClick={onClearCart}
-                    className="w-full py-2.5 bg-white/5 hover:bg-white/10 text-white/60 hover:text-white font-black tracking-widest text-[9px] uppercase border border-white/10 transition-all"
+                    className="w-full py-2.5 bg-bg-nested hover:bg-bg-card text-text-muted hover:text-text-main font-black tracking-widest text-[9px] uppercase border border-border-subtle transition-all"
                   >
                     LIMPAR CARRINHO
                   </button>

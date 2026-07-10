@@ -1,8 +1,81 @@
 @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&family=JetBrains+Mono:wght@400;500;600;700&display=swap');
 @import "tailwindcss";
 
+:root {
+  --bg-main: #FAFAFA;
+  --bg-card: #FFFFFF;
+  --bg-nested: #F3F3F3;
+  --bg-input: #F3F3F3;
+  --text-main: #000000;
+  --text-muted: rgba(0, 0, 0, 0.65);
+  --text-dim: rgba(0, 0, 0, 0.4);
+  --border-main: #000000;
+  --border-subtle: rgba(0, 0, 0, 0.12);
+  --border-very-subtle: rgba(0, 0, 0, 0.06);
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    --bg-main: #0A0A0A;
+    --bg-card: #111111;
+    --bg-nested: #1A1A1A;
+    --bg-input: #111111;
+    --text-main: #FFFFFF;
+    --text-muted: rgba(255, 255, 255, 0.65);
+    --text-dim: rgba(255, 255, 255, 0.4);
+    --border-main: #FFFFFF;
+    --border-subtle: rgba(255, 255, 255, 0.12);
+    --border-very-subtle: rgba(255, 255, 255, 0.06);
+  }
+}
+
+html[data-theme="light"] {
+  --bg-main: #FAFAFA;
+  --bg-card: #FFFFFF;
+  --bg-nested: #F3F3F3;
+  --bg-input: #F3F3F3;
+  --text-main: #000000;
+  --text-muted: rgba(0, 0, 0, 0.65);
+  --text-dim: rgba(0, 0, 0, 0.4);
+  --border-main: #000000;
+  --border-subtle: rgba(0, 0, 0, 0.12);
+  --border-very-subtle: rgba(0, 0, 0, 0.06);
+}
+
+html[data-theme="dark"] {
+  --bg-main: #0A0A0A;
+  --bg-card: #111111;
+  --bg-nested: #1A1A1A;
+  --bg-input: #111111;
+  --text-main: #FFFFFF;
+  --text-muted: rgba(255, 255, 255, 0.65);
+  --text-dim: rgba(255, 255, 255, 0.4);
+  --border-main: #FFFFFF;
+  --border-subtle: rgba(255, 255, 255, 0.12);
+  --border-very-subtle: rgba(255, 255, 255, 0.06);
+}
+
 @theme {
   --font-sans: "Inter", ui-sans-serif, system-ui, sans-serif;
   --font-mono: "JetBrains Mono", ui-monospace, SFMono-Regular, monospace;
+  --color-bg-main: var(--bg-main);
+  --color-bg-card: var(--bg-card);
+  --color-bg-nested: var(--bg-nested);
+  --color-bg-input: var(--bg-input);
+  --color-text-main: var(--text-main);
+  --color-text-muted: var(--text-muted);
+  --color-text-dim: var(--text-dim);
+  --color-border-main: var(--border-main);
+  --color-border-subtle: var(--border-subtle);
+  --color-border-very-subtle: var(--border-very-subtle);
+}
+
+/* Utility to hide scrollbars while preserving scrolling functionality */
+.scrollbar-none::-webkit-scrollbar {
+  display: none;
+}
+.scrollbar-none {
+  -ms-overflow-style: none;  /* IE and Edge */
+  scrollbar-width: none;  /* Firefox */
 }
 

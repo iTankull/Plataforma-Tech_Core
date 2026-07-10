@@ -33,3 +33,21 @@ export interface CartItem {
   product: Product;
   quantity: number;
 }
+
+export interface PurchaseItem {
+  productId: string;
+  name: string;
+  image: string;
+  pricePaid: number;
+  quantity: number;
+}
+
+export interface Purchase {
+  id: string;
+  date: string;
+  items: PurchaseItem[];
+  total: number;
+  deliveryDetails: string;
+  userId: string;
+}
+

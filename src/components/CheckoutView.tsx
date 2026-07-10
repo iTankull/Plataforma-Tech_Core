@@ -10,7 +10,7 @@ interface CheckoutViewProps {
   onClearCart: () => void;
   onUpdateQuantity: (productId: string, qty: number) => void;
   onRemoveItem: (productId: string) => void;
-  onCompletePurchase: (totalWithDiscount: number) => boolean;
+  onCompletePurchase: (totalWithDiscount: number, deliveryDetails: string) => string | null;
   onOpenAuth: () => void;
   onAddFunds: () => void;
 }
@@ -95,17 +95,19 @@ export default function CheckoutView({
       finalAddress = `RETIRADA NO LOCAL: ${pickupLocation} (${locDetails?.details || ''})`;
     }
 
-    const success = onCompletePurchase(totalWithDiscount);
+    const deliveryDetails = deliveryOption === 'pickup'
+      ? `RETIRADA PÚBLICA AGENDADA EM: ${pickupLocation} (${pickupPoints.find(l => l.name === pickupLocation)?.details || ''})`
+      : `ENVIO POSTAL/MOTOBOY PARA: ${finalAddress}, CEP ${finalZip} - ${finalCity}/${finalState}`;
 
-    if (success) {
+    const orderId = onCompletePurchase(totalWithDiscount, deliveryDetails);
+
+    if (orderId) {
       setCheckoutSuccessData({
-        orderId: `TC-${Math.floor(100000 + Math.random() * 900000)}`,
+        orderId,
         total: totalWithDiscount,
         paymentMethodName: 'PAGAMENTO VIA PIX (CONCLUÍDO)',
         itemsCount: cart.reduce((acc, item) => acc + item.quantity, 0),
-        deliveryDetails: deliveryOption === 'pickup'
-          ? `RETIRADA PÚBLICA AGENDADA EM: ${pickupLocation} (${pickupPoints.find(l => l.name === pickupLocation)?.details || ''})`
-          : `ENVIO POSTAL/MOTOBOY PARA: ${finalAddress}, CEP ${finalZip} - ${finalCity}/${finalState}`,
+        deliveryDetails,
       });
       onClearCart();
     }
@@ -116,37 +118,37 @@ export default function CheckoutView({
       <motion.div
         initial={{ opacity: 0, scale: 0.98 }}
         animate={{ opacity: 1, scale: 1 }}
-        className="max-w-3xl mx-auto border-4 border-white bg-black p-8 md:p-12 text-center my-12 relative"
+        className="max-w-3xl mx-auto border-4 border-border-main bg-bg-card p-8 md:p-12 text-center my-12 relative text-text-main"
       >
-        <div className="absolute top-4 right-4 text-xs font-mono text-white/30">[ STATUS: CONFIRMADO ]</div>
-        <div className="w-20 h-20 bg-[#FF3E00] flex items-center justify-center mx-auto mb-6 border-2 border-white animate-pulse">
+        <div className="absolute top-4 right-4 text-xs font-mono text-text-dim">[ STATUS: CONFIRMADO ]</div>
+        <div className="w-20 h-20 bg-[#FF3E00] flex items-center justify-center mx-auto mb-6 border-2 border-border-main animate-pulse">
           <Check className="w-10 h-10 text-white" />
         </div>
         
-        <h2 className="text-3xl md:text-5xl font-black tracking-tighter uppercase mb-4">
+        <h2 className="text-3xl md:text-5xl font-black tracking-tighter uppercase mb-4 text-text-main">
           TRANSAÇÃO CONCLUÍDA!
         </h2>
         
-        <p className="font-mono text-xs text-white/60 max-w-lg mx-auto mb-8 leading-relaxed">
+        <p className="font-mono text-xs text-text-muted max-w-lg mx-auto mb-8 leading-relaxed">
           Sua transação simulada de aquisição foi registrada com sucesso sob os moldes de revenda com 45% OFF da plataforma. Nenhum valor real foi cobrado.
         </p>
 
-        <div className="bg-[#111] border border-white/10 p-6 text-left max-w-md mx-auto space-y-3 font-mono text-xs mb-10">
-          <div className="flex justify-between border-b border-white/5 pb-1.5">
-            <span className="text-white/40">ID DO PEDIDO:</span>
-            <span className="font-black text-white">{checkoutSuccessData.orderId}</span>
+        <div className="bg-bg-nested border border-border-subtle p-6 text-left max-w-md mx-auto space-y-3 font-mono text-xs mb-10">
+          <div className="flex justify-between border-b border-border-very-subtle pb-1.5">
+            <span className="text-text-muted">ID DO PEDIDO:</span>
+            <span className="font-black text-text-main">{checkoutSuccessData.orderId}</span>
           </div>
-          <div className="flex justify-between border-b border-white/5 pb-1.5">
-            <span className="text-white/40">ITENS ADQUIRIDOS:</span>
-            <span className="font-black text-white">{checkoutSuccessData.itemsCount} GADGETS</span>
+          <div className="flex justify-between border-b border-border-very-subtle pb-1.5">
+            <span className="text-text-muted">ITENS ADQUIRIDOS:</span>
+            <span className="font-black text-text-main">{checkoutSuccessData.itemsCount} GADGETS</span>
           </div>
-          <div className="flex justify-between border-b border-white/5 pb-1.5">
-            <span className="text-white/40">MÉTODO DE PAGAMENTO:</span>
-            <span className="font-black text-white">{checkoutSuccessData.paymentMethodName}</span>
+          <div className="flex justify-between border-b border-border-very-subtle pb-1.5">
+            <span className="text-text-muted">MÉTODO DE PAGAMENTO:</span>
+            <span className="font-black text-text-main">{checkoutSuccessData.paymentMethodName}</span>
           </div>
-          <div className="border-b border-white/5 pb-1.5">
-            <span className="text-white/40 block mb-1">DETALHES DA ENTREGA:</span>
-            <span className="font-black text-white text-[10px] uppercase leading-tight block">{checkoutSuccessData.deliveryDetails}</span>
+          <div className="border-b border-border-very-subtle pb-1.5">
+            <span className="text-text-muted block mb-1">DETALHES DA ENTREGA:</span>
+            <span className="font-black text-text-main text-[10px] uppercase leading-tight block">{checkoutSuccessData.deliveryDetails}</span>
           </div>
           <div className="flex justify-between pt-1.5 text-sm">
             <span className="text-[#FF3E00] font-black">TOTAL COMPENSADO:</span>
@@ -158,7 +160,7 @@ export default function CheckoutView({
 
         <button
           onClick={onBackToCatalog}
-          className="px-8 py-4 bg-white text-black hover:bg-[#FF3E00] hover:text-white font-black tracking-widest text-xs uppercase rounded-none transition-all duration-150"
+          className="px-8 py-4 bg-text-main text-bg-main hover:bg-[#FF3E00] hover:text-white font-black tracking-widest text-xs uppercase rounded-none transition-all duration-150"
         >
           VOLTAR AO CATÁLOGO
         </button>

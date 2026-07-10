@@ -38,16 +38,19 @@ import {
   Dices,
   BatteryCharging,
   Cpu,
+  Sun,
+  Moon,
   MousePointerClick
 } from 'lucide-react';
 
-import { Product, Review, User } from './types';
+import { Product, Review, User, Purchase, PurchaseItem } from './types';
 import { DEFAULT_PRODUCTS, DEFAULT_REVIEWS } from './data/products';
 import ProductCard from './components/ProductCard';
 import ProductModal from './components/ProductModal';
 import AuthModal from './components/AuthModal';
 import CartDrawer from './components/CartDrawer';
 import CheckoutView from './components/CheckoutView';
+import ProfileDrawer from './components/ProfileDrawer';
 
 const CATEGORIES = [
   { id: 'Todas', name: 'TODOS OS ITENS', icon: Compass },
@@ -88,6 +91,18 @@ const PRESET_PRODUCT_IMAGES = [
 ];
 
 export default function App(): React.JSX.Element {
+  // --- Theme State & Persistence ---
+  const [theme, setTheme] = useState<'light' | 'dark'>(() => {
+    const saved = localStorage.getItem('theme');
+    if (saved === 'light' || saved === 'dark') return saved;
+    return window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
+  });
+
+  useEffect(() => {
+    document.documentElement.setAttribute('data-theme', theme);
+    localStorage.setItem('theme', theme);
+  }, [theme]);
+
   // --- Persistent States ---
   const [products, setProducts] = useState<Product[]>([]);
   const [reviews, setReviews] = useState<Review[]>([]);
@@ -97,8 +112,21 @@ export default function App(): React.JSX.Element {
   // --- Cart and Checkout States ---
   const [cart, setCart] = useState<{ product: Product; quantity: number }[]>([]);
   const [isCartOpen, setIsCartOpen] = useState<boolean>(false);
+  const [isProfileOpen, setIsProfileOpen] = useState<boolean>(false);
+  const [purchases, setPurchases] = useState<Purchase[]>(() => {
+    const saved = localStorage.getItem('tech_purchases');
+    try {
+      return saved ? JSON.parse(saved) : [];
+    } catch {
+      return [];
+    }
+  });
   const [currentView, setCurrentView] = useState<'home' | 'checkout'>('home');
   const [salesCount, setSalesCount] = useState<number>(24);
+
+  useEffect(() => {
+    localStorage.setItem('tech_purchases', JSON.stringify(purchases));
+  }, [purchases]);
 
   // --- Filtering / Sorting States ---
   const [searchQuery, setSearchQuery] = useState<string>('');
@@ -366,6 +394,26 @@ export default function App(): React.JSX.Element {
     setSalesCount(newSalesCount);
     localStorage.setItem('tech_sales_count', String(newSalesCount));
 
+    // Record purchase inside the purchase history list
+    const orderId = `TC-${Math.floor(100000 + Math.random() * 900000)}`;
+    const newPurchase: Purchase = {
+      id: orderId,
+      date: new Date().toISOString(),
+      userId: currentUser.id,
+      total: discountedPrice,
+      deliveryDetails: 'RETIRADA EM: ESTAÇÃO TIRADENTES (METRÔ LINHA 1-AZUL) (A COMBINAR)',
+      items: [
+        {
+          productId: productToBuy.id,
+          name: productToBuy.name,
+          image: productToBuy.image,
+          pricePaid: discountedPrice,
+          quantity: 1,
+        }
+      ]
+    };
+    setPurchases(prev => [newPurchase, ...prev]);
+
     triggerNotification(`Compra de "${productToBuy.name}" simulada com sucesso!`, 'success');
     return true;
   };
@@ -411,7 +459,7 @@ export default function App(): React.JSX.Element {
   }, [products, selectedCategory, showFavoritesOnly, searchQuery, favorites, sortBy]);
 
   return (
-    <div className="min-h-screen bg-[#0A0A0A] text-white font-sans antialiased selection:bg-[#FF3E00] selection:text-white pb-16">
+    <div className="min-h-screen bg-bg-main text-text-main font-sans antialiased selection:bg-[#FF3E00] selection:text-white pb-16">
       {/* Dynamic Header Banner Notification */}
       <AnimatePresence>
         {globalNotification && (
@@ -419,7 +467,7 @@ export default function App(): React.JSX.Element {
             initial={{ opacity: 0, y: -50 }}
             animate={{ opacity: 1, y: 0 }}
             exit={{ opacity: 0, y: -50 }}
-            className="fixed top-5 left-1/2 -translate-x-1/2 z-50 flex items-center gap-2.5 px-6 py-4 rounded-none shadow-2xl border-2 border-white bg-black max-w-md text-white font-mono"
+            className="fixed top-5 left-1/2 -translate-x-1/2 z-50 flex items-center gap-2.5 px-6 py-4 rounded-none shadow-2xl border-2 border-border-main bg-bg-card max-w-md text-text-main font-mono"
           >
             <CheckCircle className="w-5 h-5 text-[#FF3E00] shrink-0" />
             <span className="text-xs font-black tracking-widest uppercase">{globalNotification.text}</span>
@@ -428,7 +476,7 @@ export default function App(): React.JSX.Element {
       </AnimatePresence>
 
       {/* Primary Navigation Header in Bold Typography Style */}
-      <nav className="sticky top-0 bg-black/95 backdrop-blur-md border-b border-white/10 z-40">
+      <nav className="sticky top-0 bg-bg-card/95 backdrop-blur-md border-b border-border-subtle z-40">
         <div className="max-w-7xl mx-auto px-6 md:px-8 h-24 flex items-center justify-between gap-6">
           
           {/* Logo & Vibe */}
@@ -439,44 +487,46 @@ export default function App(): React.JSX.Element {
           </div>
 
           {/* Search bar inside header in technical style */}
-          <div className="hidden md:flex items-center flex-1 max-w-2xl relative">
+          <div className="hidden lg:flex items-center flex-1 max-w-2xl relative">
             <input
               id="header-search-input"
               type="text"
               placeholder="PESQUISAR GADGET..."
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
-              className="w-full bg-[#1A1A1A] border-2 border-white/5 px-6 py-3.5 pl-12 text-xs font-black tracking-widest text-white focus:outline-none focus:border-[#FF3E00] focus:ring-0 placeholder-white/20 rounded-none transition-all duration-150 uppercase"
+              className="w-full bg-bg-input border-2 border-border-very-subtle px-6 py-3.5 pl-12 text-xs font-black tracking-widest text-text-main focus:outline-none focus:border-[#FF3E00] focus:ring-0 placeholder-text-dim rounded-none transition-all duration-150 uppercase"
             />
             <Search className="w-4 h-4 text-[#FF3E00] absolute left-4.5" />
-            <div className="absolute right-4 text-[9px] font-mono opacity-40">[ SEARCH_ON ]</div>
+            <div className="absolute right-4 text-[9px] font-mono text-text-dim">[ SEARCH_ON ]</div>
           </div>
 
           {/* Favorites counter, Cart and Account options */}
           <div className="flex items-center gap-6">
             
             {/* Saved Count */}
-            <button
-              id="header-saved-btn"
-              onClick={() => {
-                setCurrentView('home');
-                setShowFavoritesOnly(!showFavoritesOnly);
-                if (!showFavoritesOnly) setSelectedCategory('Todas');
-              }}
-              className={`hidden sm:flex flex-col items-end cursor-pointer ${showFavoritesOnly ? 'text-[#FF3E00]' : 'text-white/60 hover:text-white'}`}
-            >
-              <span className="text-[9px] font-black tracking-widest uppercase">FAVORITOS</span>
-              <span className="text-lg font-black tracking-tighter flex items-center gap-1">
-                {favorites.length}
-                <Heart className={`w-3.5 h-3.5 ${showFavoritesOnly ? 'fill-[#FF3E00]' : ''}`} />
-              </span>
-            </button>
+            {currentUser && (
+              <button
+                id="header-saved-btn"
+                onClick={() => {
+                  setCurrentView('home');
+                  setShowFavoritesOnly(!showFavoritesOnly);
+                  if (!showFavoritesOnly) setSelectedCategory('Todas');
+                }}
+                className={`hidden sm:flex flex-col items-end cursor-pointer ${showFavoritesOnly ? 'text-[#FF3E00]' : 'text-text-muted hover:text-text-main'}`}
+              >
+                <span className="text-[9px] font-black tracking-widest uppercase">FAVORITOS</span>
+                <span className="text-lg font-black tracking-tighter flex items-center gap-1">
+                  {favorites.length}
+                  <Heart className={`w-3.5 h-3.5 ${showFavoritesOnly ? 'fill-[#FF3E00]' : ''}`} />
+                </span>
+              </button>
+            )}
 
             {/* Cart Count */}
             <button
               id="header-cart-btn"
               onClick={() => setIsCartOpen(true)}
-              className="flex flex-col items-end cursor-pointer text-white/60 hover:text-white relative"
+              className="flex flex-col items-end cursor-pointer text-text-muted hover:text-text-main relative"
             >
               <span className="text-[9px] font-black tracking-widest uppercase">CARRINHO</span>
               <span className="text-lg font-black tracking-tighter flex items-center gap-1">
@@ -485,29 +535,46 @@ export default function App(): React.JSX.Element {
               </span>
             </button>
 
+            {/* Theme Switcher Button */}
+            <button
+              id="header-theme-toggle-btn"
+              onClick={() => {
+                setTheme((prev) => (prev === 'light' ? 'dark' : 'light'));
+                triggerNotification(`Modo ${theme === 'light' ? 'Escuro' : 'Claro'} ativado!`, 'info');
+              }}
+              className="p-3 bg-bg-input border border-border-subtle text-text-muted hover:text-[#FF3E00] hover:border-[#FF3E00] transition-all duration-200"
+              title={theme === 'light' ? 'Ativar Modo Escuro' : 'Ativar Modo Claro'}
+            >
+              {theme === 'light' ? <Moon className="w-4 h-4" /> : <Sun className="w-4 h-4" />}
+            </button>
+
             {/* Profile / Login */}
             {currentUser ? (
               <div className="flex items-center gap-3">
                 <div className="flex flex-col items-end hidden sm:flex text-right">
-                  <span className="text-[10px] font-black tracking-widest text-white/50 uppercase">SALDO SIMULADO</span>
+                  <span className="text-[10px] font-black tracking-widest text-text-dim uppercase">SALDO SIMULADO</span>
                   <button
                     id="header-btn-add-funds"
                     onClick={handleAddFunds}
-                    className="text-xs font-black text-[#FF3E00] hover:text-white font-mono transition-colors duration-150"
+                    className="text-xs font-black text-[#FF3E00] hover:text-text-main font-mono transition-colors duration-150"
                     title="Adicionar +R$ 5.000 fictícios"
                   >
                     R$ {currentUser.balance.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
                   </button>
                 </div>
 
-                <div className="w-12 h-12 bg-white flex items-center justify-center text-black font-black text-sm select-none border-2 border-white">
+                <div
+                  onClick={() => setIsProfileOpen(true)}
+                  className="w-12 h-12 bg-text-main hover:bg-[#FF3E00] flex items-center justify-center text-bg-main hover:text-white font-black text-sm select-none border-2 border-text-main hover:border-[#FF3E00] cursor-pointer transition-all duration-150"
+                  title="Ver meu perfil e histórico de compras"
+                >
                   {currentUser.name.slice(0, 2).toUpperCase()}
                 </div>
 
                 <button
                   id="header-btn-logout"
                   onClick={handleLogout}
-                  className="p-3 bg-[#1A1A1A] border border-white/15 text-white/60 hover:text-[#FF3E00] hover:border-[#FF3E00] transition-all duration-200"
+                  className="p-3 bg-bg-input border border-border-subtle text-text-muted hover:text-[#FF3E00] hover:border-[#FF3E00] transition-all duration-200"
                   title="Fazer Logout"
                 >
                   <LogOut className="w-4 h-4" />
@@ -517,7 +584,7 @@ export default function App(): React.JSX.Element {
               <button
                 id="header-btn-login"
                 onClick={() => setShowAuthModal(true)}
-                className="px-5 py-3.5 bg-white text-black hover:bg-[#FF3E00] hover:text-white text-xs font-black tracking-widest uppercase rounded-none transition-all duration-200"
+                className="px-5 py-3.5 bg-text-main text-bg-main hover:bg-[#FF3E00] hover:text-white text-xs font-black tracking-widest uppercase rounded-none transition-all duration-200"
               >
                 CRIAR PERFIL
               </button>
@@ -536,7 +603,12 @@ export default function App(): React.JSX.Element {
             onClearCart={handleClearCart}
             onUpdateQuantity={handleUpdateCartQuantity}
             onRemoveItem={handleRemoveFromCart}
-            onCompletePurchase={(totalWithDiscount) => {
+            onCompletePurchase={(totalWithDiscount, deliveryDetails) => {
+              if (currentUser && currentUser.balance < totalWithDiscount) {
+                triggerNotification('Saldo fictício insuficiente! Adicione fundos para simular a aquisição.', 'error');
+                return null;
+              }
+
               // Decrement stock in database of items
               const updatedProducts = products.map((prod) => {
                 const cartItem = cart.find((item) => item.product.id === prod.id);
@@ -572,8 +644,28 @@ export default function App(): React.JSX.Element {
               setSalesCount(newSalesCount);
               localStorage.setItem('tech_sales_count', String(newSalesCount));
 
+              // Record the purchase in history
+              const orderId = `TC-${Math.floor(100000 + Math.random() * 900000)}`;
+              if (currentUser) {
+                const newPurchase: Purchase = {
+                  id: orderId,
+                  date: new Date().toISOString(),
+                  userId: currentUser.id,
+                  total: totalWithDiscount,
+                  deliveryDetails,
+                  items: cart.map((item) => ({
+                    productId: item.product.id,
+                    name: item.product.name,
+                    image: item.product.image,
+                    pricePaid: item.product.price * 0.55,
+                    quantity: item.quantity,
+                  })),
+                };
+                setPurchases((prev) => [newPurchase, ...prev]);
+              }
+
               triggerNotification(`Aquisição simulada de ${totalItemsBought} item(ns) concluída com sucesso!`, 'success');
-              return true;
+              return orderId;
             }}
             onOpenAuth={() => setShowAuthModal(true)}
             onAddFunds={handleAddFunds}
@@ -581,47 +673,47 @@ export default function App(): React.JSX.Element {
         ) : (
           <>
             {/* Dynamic Highlight Banner with Brutalist Slogan layout */}
-            <div className="border-2 border-white bg-black p-8 md:p-12 mb-10 flex flex-col md:flex-row items-stretch justify-between gap-8 relative overflow-hidden">
+            <div className="border-2 border-border-main bg-bg-card p-8 md:p-12 mb-10 flex flex-col md:flex-row items-stretch justify-between gap-8 relative overflow-hidden text-text-main">
           <div className="space-y-4 max-w-2xl relative z-10 flex flex-col justify-center">
             <div>
               <span className="bg-[#FF3E00] text-white px-3 py-1 text-[10px] font-black tracking-widest uppercase">
-                OUTLET EXCLUSIVO // PRODUTOS NOVOS E LACRADOS
+                OUTLET EXCLUSIVO // PRODUTOS EM ESTADO DE NOVO
               </span>
             </div>
-            <h2 className="text-4xl md:text-6xl font-black tracking-tighter leading-[0.9] uppercase">
+            <h2 className="text-4xl md:text-6xl font-black tracking-tighter leading-[0.9] uppercase text-text-main">
               REVENDAS PREMIUM <br />
               <span className="text-[#FF3E00]">COM DESCONTO_</span>
             </h2>
-            <p className="text-white/60 text-xs md:text-sm leading-relaxed max-w-lg font-mono">
-              Seja bem-vindo ao meu catálogo pessoal de revendas de tecnologia! São itens novos, lacrados na caixa ou nunca utilizados, que adquiri e agora estou revendendo bem abaixo do valor original de mercado. Todos contam com o desconto padrão incrível de 45% já aplicado sobre o valor de referência original. Aproveite para analisar os detalhes, ler as avaliações ou simular sua compra.
+            <p className="text-text-muted text-xs md:text-sm leading-relaxed max-w-lg font-mono">
+              Seja bem-vindo ao meu catálogo pessoal de revendas de tecnologia! São itens em estado de novo, impecáveis ou de outlet, que adquiri e agora estou revendendo bem abaixo do valor original de mercado. Todos contam com o desconto padrão incrível de 45% já aplicado sobre o valor de referência original.
             </p>
           </div>
 
-          <div className="w-full md:w-64 border-t-2 md:border-t-0 md:border-l-2 border-white/10 pt-6 md:pt-0 md:pl-8 flex flex-col justify-between shrink-0 font-mono">
+          <div className="w-full md:w-64 border-t-2 md:border-t-0 md:border-l-2 border-border-subtle pt-6 md:pt-0 md:pl-8 flex flex-col justify-between shrink-0 font-mono">
             <div>
               <h4 className="text-[10px] font-black tracking-widest uppercase text-[#FF3E00] mb-3">DADOS DO ACERVO</h4>
               <div className="space-y-2 text-xs">
-                <div className="flex justify-between border-b border-white/5 pb-1">
-                  <span className="text-white/40 uppercase">MEUS ITENS</span>
-                  <span className="font-black">{products.length} GADGETS</span>
+                <div className="flex justify-between border-b border-border-very-subtle pb-1">
+                  <span className="text-text-dim uppercase">MEUS ITENS</span>
+                  <span className="font-black">{products.length} PRODUTOS</span>
                 </div>
-                <div className="flex justify-between border-b border-white/5 pb-1">
-                  <span className="text-white/40 uppercase">VENDAS</span>
+                <div className="flex justify-between border-b border-border-very-subtle pb-1">
+                  <span className="text-text-dim uppercase">VENDAS</span>
                   <span className="font-black text-[#FF3E00]">{salesCount} CONCLUÍDAS</span>
                 </div>
-                <div className="flex justify-between border-b border-white/5 pb-1">
-                  <span className="text-white/40 uppercase">DESCONTO PADRÃO</span>
+                <div className="flex justify-between border-b border-border-very-subtle pb-1">
+                  <span className="text-text-dim uppercase">DESCONTO PADRÃO</span>
                   <span className="font-black text-[#FF3E00]">45% FLAT</span>
                 </div>
               </div>
             </div>
 
-            <div className="mt-6 p-4 bg-white/5 border border-white/10 text-[9px] text-white/50 space-y-1.5 font-bold uppercase tracking-wider">
+            <div className="mt-6 p-4 bg-bg-nested border border-border-subtle text-[9px] text-text-muted space-y-1.5 font-bold uppercase tracking-wider">
               <div className="flex items-center gap-1.5">
                 <span className="text-[#FF3E00]">✓</span> ENVIO IMEDIATO E SEGURO
               </div>
               <div className="flex items-center gap-1.5">
-                <span className="text-[#FF3E00]">✓</span> PRODUTOS 100% NOVOS
+                <span className="text-[#FF3E00]">✓</span> PRODUTOS NOVOS E TESTADOS
               </div>
               <div className="flex items-center gap-1.5">
                 <span className="text-[#FF3E00]">✓</span> CURADORIA INDEPENDENTE
@@ -630,31 +722,138 @@ export default function App(): React.JSX.Element {
           </div>
         </div>
 
+        {/* Mobile & Tablet Search and Filters Section (Visible only on < lg) */}
+        <div className="lg:hidden w-full flex flex-col gap-4 mb-8 bg-bg-card border-2 border-border-main p-4 sm:p-6 text-text-main">
+          
+          {/* Search Bar */}
+          <div className="relative w-full">
+            <input
+              id="mobile-tablet-search-input"
+              type="text"
+              placeholder="PESQUISAR PRODUTOS OU GADGETS..."
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              className="w-full bg-bg-input border-2 border-border-very-subtle px-4 py-3 pl-11 text-xs font-black tracking-widest text-text-main focus:outline-none focus:border-[#FF3E00] focus:ring-0 placeholder-text-dim rounded-none transition-all duration-150 uppercase"
+            />
+            <Search className="w-4 h-4 text-[#FF3E00] absolute left-4 top-1/2 -translate-y-1/2 pointer-events-none" />
+            {searchQuery && (
+              <button
+                onClick={() => setSearchQuery('')}
+                className="absolute right-4 top-1/2 -translate-y-1/2 text-xs font-mono font-black text-text-muted hover:text-[#FF3E00]"
+              >
+                [LIMPAR]
+              </button>
+            )}
+          </div>
+
+          {/* Horizontal Scrollable Categories with Smooth Snapping and Custom Styling */}
+          <div>
+            <div className="flex items-center justify-between mb-2">
+              <span className="text-[9px] font-black tracking-widest text-[#FF3E00] uppercase">
+                CATEGORIAS // ARRASTE PARA VER MAIS
+              </span>
+              <span className="text-[9px] font-mono text-text-dim">
+                {selectedCategory === 'Todas' ? 'TODOS' : selectedCategory.toUpperCase()}
+              </span>
+            </div>
+            
+            <div className="relative">
+              <div className="flex gap-2 overflow-x-auto pb-2 scrollbar-none snap-x -mx-4 px-4 sm:-mx-6 sm:px-6">
+                {CATEGORIES.map((cat) => {
+                  const isActive = selectedCategory === cat.id && !showFavoritesOnly;
+                  const IconComponent = cat.icon;
+                  return (
+                    <button
+                      key={cat.id}
+                      onClick={() => {
+                        setSelectedCategory(cat.id);
+                        setShowFavoritesOnly(false);
+                      }}
+                      className={`snap-start shrink-0 px-4 py-2.5 text-xs font-black tracking-wider uppercase border-2 transition-all flex items-center gap-2 rounded-none ${
+                        isActive
+                          ? 'bg-[#FF3E00] border-[#FF3E00] text-white'
+                          : 'bg-bg-input border-border-very-subtle text-text-muted hover:text-text-main hover:border-border-subtle'
+                      }`}
+                    >
+                      <IconComponent className="w-3.5 h-3.5 shrink-0" />
+                      <span>{cat.id === 'Todas' ? 'TODOS OS ITENS' : cat.id.toUpperCase()}</span>
+                    </button>
+                  );
+                })}
+              </div>
+            </div>
+          </div>
+
+          {/* Quick Filters and Sorter on Mobile/Tablet */}
+          <div className="flex flex-col sm:flex-row gap-3 items-stretch sm:items-center">
+            
+            {/* Favorites button if user is logged in */}
+            {currentUser && (
+              <button
+                id="mobile-btn-favorites"
+                onClick={() => {
+                  setShowFavoritesOnly(!showFavoritesOnly);
+                  if (!showFavoritesOnly) setSelectedCategory('Todas');
+                }}
+                className={`flex-1 sm:flex-initial py-2.5 px-4 border-2 font-black tracking-widest text-[10px] uppercase transition-all flex items-center justify-between sm:justify-center gap-2 rounded-none ${
+                  showFavoritesOnly 
+                    ? 'bg-[#FF3E00] border-[#FF3E00] text-white' 
+                    : 'bg-bg-input border-border-very-subtle text-text-muted hover:text-text-main hover:border-border-subtle'
+                }`}
+              >
+                <span className="flex items-center gap-1.5">
+                  <Heart className={`w-3.5 h-3.5 ${showFavoritesOnly ? 'fill-white' : ''}`} />
+                  APENAS FAVORITADOS
+                </span>
+                <span className="font-mono text-xs opacity-70">({favorites.length})</span>
+              </button>
+            )}
+
+            {/* Exhibition Order Selection */}
+            <div className="relative flex-1">
+              <select
+                id="mobile-select-sort"
+                value={sortBy}
+                onChange={(e) => setSortBy(e.target.value)}
+                className="w-full bg-bg-input border-2 border-border-very-subtle text-text-main font-black tracking-widest text-[10px] px-3.5 py-2.5 outline-none rounded-none cursor-pointer appearance-none uppercase pr-8"
+              >
+                <option value="default">DESTAQUE / PADRÃO</option>
+                <option value="price-asc">PREÇO: MENOR PARA MAIOR</option>
+                <option value="price-desc">PREÇO: MAIOR PARA MENOR</option>
+                <option value="rating-desc">MELHORES CRÍTICAS</option>
+              </select>
+              <ChevronDown className="w-4 h-4 text-[#FF3E00] absolute right-3 top-1/2 -translate-y-1/2 pointer-events-none" />
+            </div>
+
+            {/* Clear filters trigger */}
+            {(searchQuery || selectedCategory !== 'Todas' || showFavoritesOnly || sortBy !== 'default') && (
+              <button
+                id="mobile-btn-reset-filters"
+                onClick={() => {
+                  setSearchQuery('');
+                  setSelectedCategory('Todas');
+                  setShowFavoritesOnly(false);
+                  setSortBy('default');
+                  triggerNotification('Todos os filtros e buscas limpos', 'info');
+                }}
+                className="py-2.5 px-4 bg-[#FF3E00]/10 hover:bg-[#FF3E00] text-[#FF3E00] hover:text-white text-[10px] font-black tracking-widest uppercase border-2 border-[#FF3E00]/20 hover:border-[#FF3E00] transition-all rounded-none"
+              >
+                LIMPAR FILTROS
+              </button>
+            )}
+          </div>
+        </div>
+
         {/* Categories, Search and Filter Section in Sidebar layout */}
         <div className="flex flex-col lg:flex-row gap-8 items-start">
           
           {/* Aside Sidebar */}
-          <aside className="w-full lg:w-72 border-r border-white/10 pr-0 lg:pr-8 flex flex-col gap-8 lg:sticky lg:top-28 shrink-0">
+          <aside className="hidden lg:flex lg:flex-col lg:w-72 border-r border-border-subtle pr-8 gap-8 lg:sticky lg:top-28 shrink-0">
             
-            {/* Search Box on smaller screen, or filter display */}
-            <div className="w-full md:hidden">
-              <div className="relative">
-                <input
-                  id="mobile-search-input"
-                  type="text"
-                  placeholder="PESQUISAR GADGET..."
-                  value={searchQuery}
-                  onChange={(e) => setSearchQuery(e.target.value)}
-                  className="w-full bg-[#1A1A1A] border-2 border-white/5 px-4 py-3 pl-10 text-xs font-black tracking-widest text-white focus:outline-none focus:border-[#FF3E00] placeholder-white/20 uppercase"
-                />
-                <Search className="w-4 h-4 text-[#FF3E00] absolute left-3.5 top-3.5" />
-              </div>
-            </div>
-
             {/* Technical Categories selector */}
             <div className="w-full">
               <h3 className="text-[10px] font-black tracking-[0.25em] mb-4 text-[#FF3E00] uppercase">LISTA DE CATEGORIAS</h3>
-              <ul className="space-y-2 max-h-[350px] overflow-y-auto pr-2 custom-scrollbar scrollbar-thin scrollbar-thumb-white/10 scrollbar-track-transparent">
+              <ul className="space-y-2 max-h-[520px] overflow-y-auto pr-2 custom-scrollbar scrollbar-thin scrollbar-thumb-border-subtle scrollbar-track-transparent">
                 {CATEGORIES.map((cat) => {
                   const isActive = selectedCategory === cat.id && !showFavoritesOnly;
                   return (
@@ -668,10 +867,10 @@ export default function App(): React.JSX.Element {
                       className={`text-sm font-black tracking-tight cursor-pointer uppercase py-1 border-b transition-all duration-150 flex items-center justify-between ${
                         isActive
                           ? 'text-[#FF3E00] border-[#FF3E00] pl-2'
-                          : 'text-white/60 hover:text-white border-white/5 hover:border-white/20'
+                          : 'text-text-muted hover:text-text-main border-border-very-subtle hover:border-border-subtle'
                       }`}
                     >
-                      <span>{cat.id === 'Todas' ? 'TODOS OS GADGETS' : cat.id.toUpperCase()}</span>
+                      <span>{cat.id === 'Todas' ? 'TODOS OS PRODUTOS' : cat.id.toUpperCase()}</span>
                       <span className="text-[10px] font-mono opacity-30">
                         {isActive ? '[x]' : '[-]'}
                       </span>
@@ -683,39 +882,41 @@ export default function App(): React.JSX.Element {
 
             {/* Dynamic Filter options */}
             <div className="w-full space-y-6">
-              <div>
-                <h3 className="text-[10px] font-black tracking-[0.25em] mb-3 text-white/40 uppercase">FILTRAR / ORDENAR</h3>
-                
-                {/* Favorites Trigger button styled */}
-                <button
-                  id="btn-filter-favorites"
-                  onClick={() => {
-                    setShowFavoritesOnly(!showFavoritesOnly);
-                    if (!showFavoritesOnly) setSelectedCategory('Todas');
-                  }}
-                  className={`w-full text-left py-2 px-3 border-2 font-black tracking-widest text-[9px] uppercase transition-all flex items-center justify-between ${
-                    showFavoritesOnly 
-                      ? 'bg-[#FF3E00] border-[#FF3E00] text-white' 
-                      : 'bg-black border-white/10 text-white/50 hover:text-white hover:border-white/30'
-                  }`}
-                >
-                  <span className="flex items-center gap-1.5">
-                    <Heart className="w-3.5 h-3.5" />
-                    APENAS FAVORITADOS
-                  </span>
-                  <span>({favorites.length})</span>
-                </button>
-              </div>
+              {currentUser && (
+                <div>
+                  <h3 className="text-[10px] font-black tracking-[0.25em] mb-3 text-text-dim uppercase">FILTRAR / ORDENAR</h3>
+                  
+                  {/* Favorites Trigger button styled */}
+                  <button
+                    id="btn-filter-favorites"
+                    onClick={() => {
+                      setShowFavoritesOnly(!showFavoritesOnly);
+                      if (!showFavoritesOnly) setSelectedCategory('Todas');
+                    }}
+                    className={`w-full text-left py-2 px-3 border-2 font-black tracking-widest text-[9px] uppercase transition-all flex items-center justify-between ${
+                      showFavoritesOnly 
+                        ? 'bg-[#FF3E00] border-[#FF3E00] text-white' 
+                        : 'bg-bg-main border-border-subtle text-text-muted hover:text-text-main hover:border-border-main'
+                    }`}
+                  >
+                    <span className="flex items-center gap-1.5">
+                      <Heart className="w-3.5 h-3.5" />
+                      APENAS FAVORITADOS
+                    </span>
+                    <span>({favorites.length})</span>
+                  </button>
+                </div>
+              )}
 
               {/* Sort selector stylized */}
               <div>
-                <label className="text-[9px] font-black tracking-widest text-white/40 uppercase block mb-2">ORDEM DE EXIBIÇÃO</label>
+                <label className="text-[9px] font-black tracking-widest text-text-dim uppercase block mb-2">ORDEM DE EXIBIÇÃO</label>
                 <div className="relative">
                   <select
                     id="select-sort"
                     value={sortBy}
                     onChange={(e) => setSortBy(e.target.value)}
-                    className="w-full bg-[#111] border-2 border-white/10 text-white font-black tracking-widest text-[10px] px-3.5 py-2.5 outline-none rounded-none cursor-pointer appearance-none uppercase"
+                    className="w-full bg-bg-input border-2 border-border-subtle text-text-main font-black tracking-widest text-[10px] px-3.5 py-2.5 outline-none rounded-none cursor-pointer appearance-none uppercase"
                   >
                     <option value="default">DESTAQUE / PADRÃO</option>
                     <option value="price-asc">PREÇO: MENOR PARA MAIOR</option>
@@ -737,7 +938,7 @@ export default function App(): React.JSX.Element {
                     setSortBy('default');
                     triggerNotification('Todos os filtros e buscas limpos', 'info');
                   }}
-                  className="w-full py-2 bg-white/5 hover:bg-white/10 text-white text-[10px] font-black tracking-widest uppercase border border-white/20"
+                  className="w-full py-2 bg-bg-nested hover:bg-bg-card text-text-main text-[10px] font-black tracking-widest uppercase border border-border-subtle"
                 >
                   LIMPAR FILTROS ATIVOS
                 </button>
@@ -750,15 +951,15 @@ export default function App(): React.JSX.Element {
             
             {/* Active search tag and counts */}
             {(searchQuery || selectedCategory !== 'Todas' || showFavoritesOnly || sortBy !== 'default') && (
-              <div className="bg-[#111] border border-white/10 p-4 mb-6 text-xs font-mono flex items-center justify-between flex-wrap gap-2">
-                <div className="flex items-center gap-2 text-white/60">
+              <div className="bg-bg-card border border-border-subtle p-4 mb-6 text-xs font-mono flex items-center justify-between flex-wrap gap-2">
+                <div className="flex items-center gap-2 text-text-muted">
                   <Info className="w-4 h-4 text-[#FF3E00]" />
                   <span>
-                    Exibindo <strong className="text-white">{filteredAndSortedProducts.length}</strong> gadgets correspondentes
+                    Exibindo <strong className="text-text-main">{filteredAndSortedProducts.length}</strong> produtos correspondentes
                   </span>
                 </div>
                 {searchQuery && (
-                  <span className="text-white/40">Busca: "{searchQuery}"</span>
+                  <span className="text-text-dim">Busca: "{searchQuery}"</span>
                 )}
               </div>
             )}
@@ -770,11 +971,11 @@ export default function App(): React.JSX.Element {
                   initial={{ opacity: 0 }}
                   animate={{ opacity: 1 }}
                   exit={{ opacity: 0 }}
-                  className="text-center py-20 bg-[#111] border-2 border-dashed border-white/10 p-8"
+                  className="text-center py-20 bg-bg-card border-2 border-dashed border-border-subtle p-8"
                 >
-                  <ShoppingBag className="w-12 h-12 text-white/20 mx-auto mb-4" />
-                  <h4 className="font-sans font-black text-white text-lg uppercase tracking-widest mb-2">NENHUM GADGET ENCONTRADO</h4>
-                  <p className="text-white/60 text-xs font-mono leading-relaxed max-w-sm mx-auto mb-6">
+                  <ShoppingBag className="w-12 h-12 text-text-dim mx-auto mb-4" />
+                  <h4 className="font-sans font-black text-text-main text-lg uppercase tracking-widest mb-2">NENHUM PRODUTO ENCONTRADO</h4>
+                  <p className="text-text-muted text-xs font-mono leading-relaxed max-w-sm mx-auto mb-6">
                     A pesquisa atual não retornou resultados no banco de dados. Modifique as palavras-chave ou limpe as categorias selecionadas.
                   </p>
                   <button
@@ -816,7 +1017,7 @@ export default function App(): React.JSX.Element {
       </main>
 
       {/* FOOTER */}
-      <footer className="mt-24 border-t border-white/10 bg-black py-10 text-xs text-white/40 font-mono">
+      <footer className="mt-24 border-t border-border-subtle bg-bg-card py-10 text-xs text-text-dim font-mono">
         <div className="max-w-7xl mx-auto px-6 md:px-8 flex flex-col sm:flex-row items-center justify-between gap-6">
           <p className="text-center sm:text-left tracking-wide">
             TECH_CORE GLOBAL MARKETPLACE // ALL RIGHTS RESERVED 2026
@@ -869,6 +1070,16 @@ export default function App(): React.JSX.Element {
         onRemoveItem={handleRemoveFromCart}
         onClearCart={handleClearCart}
         onGoToCheckout={() => setCurrentView('checkout')}
+      />
+
+      {/* Profile & Purchase History Drawer */}
+      <ProfileDrawer
+        isOpen={isProfileOpen}
+        onClose={() => setIsProfileOpen(false)}
+        currentUser={currentUser}
+        purchases={purchases}
+        onAddFunds={handleAddFunds}
+        onLogout={handleLogout}
       />
     </div>
   );
