@@ -184,7 +184,7 @@ export default function CheckoutView({
           SECURE SIMULATED CHECKOUT
         </span>
         <h1 className="text-4xl md:text-6xl font-black tracking-tighter uppercase mt-2">
-          FINALIZAR AQUECIMENTO_
+          FINALIZAR COMPRA_
         </h1>
         <p className="text-white/50 font-mono text-xs mt-1">
           Confira seus itens com desconto padrão aplicado de 45% flat.

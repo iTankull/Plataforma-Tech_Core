@@ -677,7 +677,7 @@ export default function App(): React.JSX.Element {
           <div className="space-y-4 max-w-2xl relative z-10 flex flex-col justify-center">
             <div>
               <span className="bg-[#FF3E00] text-white px-3 py-1 text-[10px] font-black tracking-widest uppercase">
-                OUTLET EXCLUSIVO // PRODUTOS EM ESTADO DE NOVO
+                OUTLET EXCLUSIVO // PRODUTOS NOVOS E TESTADOS
               </span>
             </div>
             <h2 className="text-4xl md:text-6xl font-black tracking-tighter leading-[0.9] uppercase text-text-main">
