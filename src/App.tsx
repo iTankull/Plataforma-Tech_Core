@@ -23,6 +23,7 @@ import {
   Sparkles,
   ShoppingBag,
   ExternalLink,
+  ArrowUpRight,
   X,
   ShoppingCart,
   ArrowLeft,
@@ -158,6 +159,16 @@ export default function App(): React.JSX.Element {
   const [selectedProduct, setSelectedProduct] = useState<Product | null>(null);
   const [showAuthModal, setShowAuthModal] = useState<boolean>(false);
   const [globalNotification, setGlobalNotification] = useState<{ text: string; type: 'success' | 'info' | 'error' } | null>(null);
+
+  // Recently Added products (Desktop Only) - We'll take a diverse set of 4 products to look amazing.
+  // E.g., the items with IDs: keychron-k2, sony-a6400, apple-watch-s9, shure-mv7
+  // If they don't exist, we fallback to slicing the first 4 products of the catalog.
+  const recentlyAddedProducts = useMemo(() => {
+    const targetIds = ['keychron-k2', 'sony-a6400', 'apple-watch-s9', 'shure-mv7'];
+    const selected = products.filter(p => targetIds.includes(p.id));
+    if (selected.length === 4) return selected;
+    return products.slice(0, 4);
+  }, [products]);
 
   // --- Load Initial Data ---
   useEffect(() => {
@@ -712,8 +723,8 @@ export default function App(): React.JSX.Element {
               REVENDAS PREMIUM <br />
               <span className="text-[#FF3E00]">COM DESCONTO_</span>
             </h2>
-            <p className="text-text-muted text-xs md:text-sm leading-relaxed max-w-lg font-mono">
-              Catálogo pessoal de itens tech novos e outlet. Desconto de 45% já aplicado em todos os produtos.
+            <p className="text-text-muted text-xs md:text-sm leading-relaxed max-w-xl font-mono">
+              Catálogo pessoal com curadoria refinada de itens tech novos e de outlet selecionados a dedo. Todas as unidades são devidamente inspecionadas e testadas para garantir o perfeito estado físico e de funcionamento. Um desconto especial de 45% já está aplicado diretamente sobre o valor final de cada produto anunciado nesta vitrine virtual.
             </p>
           </div>
 
@@ -747,6 +758,70 @@ export default function App(): React.JSX.Element {
                 <span className="text-[#FF3E00]">✓</span> CURADORIA INDEPENDENTE
               </div>
             </div>
+          </div>
+        </div>
+
+        {/* Recently Added Section - Exclusive to Desktop (hidden lg:block) - Compact Edition */}
+        <div className="hidden lg:block border-2 border-border-main bg-bg-card p-4 mb-6 text-text-main relative font-mono">
+          <div className="flex justify-between items-center mb-4 border-b border-border-very-subtle pb-2">
+            <div className="flex items-center gap-2">
+              <Sparkles className="w-4 h-4 text-[#FF3E00]" />
+              <h3 className="text-xs font-black tracking-widest uppercase">
+                RECÉM-LISTADOS NO ACERVO
+              </h3>
+            </div>
+            <div className="flex items-center gap-1.5 text-[8px] text-text-dim uppercase tracking-wider font-bold">
+              <span className="inline-block w-1.5 h-1.5 bg-[#FF3E00] rounded-full animate-ping"></span>
+              [ LIVE ]
+            </div>
+          </div>
+
+          {/* Compact Row grid of recently added products */}
+          <div className="grid grid-cols-4 gap-4">
+            {recentlyAddedProducts.map((product) => {
+              const discountedPrice = product.price * 0.55;
+              return (
+                <div
+                  key={`recent-${product.id}`}
+                  onClick={() => setSelectedProduct(product)}
+                  className="bg-bg-nested border border-border-subtle hover:border-[#FF3E00] p-2 flex gap-3 h-20 items-center group cursor-pointer transition-all duration-300 relative overflow-hidden text-text-main"
+                >
+                  {/* Technical visual decoration line */}
+                  <div className="absolute top-0 left-0 w-full h-[2px] bg-border-subtle group-hover:bg-[#FF3E00] transition-colors" />
+
+                  {/* Compact Thumbnail */}
+                  <div className="w-14 h-14 shrink-0 overflow-hidden border border-border-subtle bg-bg-card">
+                    <img
+                      src={product.image}
+                      alt={product.name}
+                      className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
+                      referrerPolicy="no-referrer"
+                    />
+                  </div>
+
+                  {/* Info Container */}
+                  <div className="flex-grow min-w-0 flex flex-col justify-between h-full py-0.5">
+                    <div>
+                      <span className="text-[7px] font-mono text-text-dim uppercase tracking-wider font-bold truncate block mb-0.5">
+                        {product.category}
+                      </span>
+                      <h4 className="font-sans font-black text-xs text-text-main group-hover:text-[#FF3E00] uppercase tracking-tight truncate transition-colors duration-200">
+                        {product.name}
+                      </h4>
+                    </div>
+
+                    <div className="flex items-baseline justify-between gap-1 border-t border-border-very-subtle/40 pt-1">
+                      <span className="text-xs font-black italic tracking-tighter text-[#FF3E00] font-sans">
+                        R$ {discountedPrice.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
+                      </span>
+                      <span className="bg-[#FF3E00]/10 text-[#FF3E00] font-black text-[7px] tracking-wider px-1 py-0.5">
+                        -45%
+                      </span>
+                    </div>
+                  </div>
+                </div>
+              );
+            })}
           </div>
         </div>
 

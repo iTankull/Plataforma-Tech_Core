@@ -13,6 +13,44 @@ interface ProductCardProps {
   onClickDetails: () => void;
 }
 
+const getCategoryStyle = (category: string) => {
+  const cat = category.toLowerCase().trim();
+  if (cat === 'keyboard' || cat === 'teclado') {
+    return 'bg-amber-50 text-amber-800 border-amber-200/60';
+  }
+  if (cat === 'câmeras' || cat === 'camera' || cat === 'cameras') {
+    return 'bg-emerald-50 text-emerald-800 border-emerald-200/60';
+  }
+  if (cat === 'smartwatches' || cat === 'smartwatch') {
+    return 'bg-indigo-50 text-indigo-800 border-indigo-200/60';
+  }
+  if (cat === 'microfones' || cat === 'microfone' || cat === 'mic') {
+    return 'bg-rose-50 text-rose-800 border-rose-200/60';
+  }
+  if (cat === 'headset & headphones' || cat === 'headset' || cat === 'headphones') {
+    return 'bg-sky-50 text-sky-800 border-sky-200/60';
+  }
+  if (cat === 'monitores portáteis' || cat === 'monitor' || cat === 'monitores') {
+    return 'bg-fuchsia-50 text-fuchsia-800 border-fuchsia-200/60';
+  }
+  if (cat === 'earbuds') {
+    return 'bg-cyan-50 text-cyan-800 border-cyan-200/60';
+  }
+  if (cat === 'mouse') {
+    return 'bg-violet-50 text-violet-800 border-violet-200/60';
+  }
+  if (cat === 'consoles portáteis' || cat === 'console' || cat === 'consoles') {
+    return 'bg-orange-50 text-orange-800 border-orange-200/60';
+  }
+  if (cat === 'utilitários para café' || cat === 'café' || cat === 'cafe') {
+    return 'bg-stone-100 text-stone-800 border-stone-200/60';
+  }
+  if (cat === 'board games' || cat === 'boardgame' || cat === 'jogo de tabuleiro') {
+    return 'bg-lime-50 text-lime-800 border-lime-200/60';
+  }
+  return 'bg-slate-50 text-slate-800 border-slate-200/60';
+};
+
 export default function ProductCard({
   product,
   isFavorite,
@@ -55,6 +93,13 @@ export default function ProductCard({
       transition={{ duration: 0.2 }}
       className="bg-bg-card border-2 border-border-subtle hover:border-[#FF3E00] rounded-none overflow-hidden transition-all duration-300 flex flex-col h-full group relative text-text-main"
     >
+      {/* Category Badge */}
+      <div className="absolute top-4 left-4 z-10 pointer-events-none">
+        <span className={`text-[9px] font-mono font-bold tracking-wider uppercase px-2.5 py-0.5 border rounded-full ${getCategoryStyle(product.category)}`}>
+          {product.category}
+        </span>
+      </div>
+
       {/* Favorite Button with brutalist style */}
       <button
         id={`btn-fav-${product.id}`}
@@ -79,15 +124,25 @@ export default function ProductCard({
         <img
           src={product.image}
           alt={product.name}
-          className="w-full h-full object-cover group-hover:scale-105 transition-all duration-500"
+          className={`w-full h-full object-cover transition-all duration-500 ${
+            product.stock === 0 ? 'grayscale opacity-75' : 'group-hover:scale-105'
+          }`}
           referrerPolicy="no-referrer"
         />
-        <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex items-center justify-center">
-          <span className="px-5 py-2.5 bg-[#FF3E00] text-white text-xs font-black tracking-widest uppercase flex items-center gap-1.5">
-            VER DETALHES
-            <ArrowUpRight className="w-4 h-4" />
-          </span>
-        </div>
+        {product.stock === 0 ? (
+          <div className="absolute inset-0 bg-black/70 flex items-center justify-center z-10">
+            <span className="px-5 py-2.5 bg-black border-2 border-white text-white text-xs font-black tracking-widest uppercase">
+              ESGOTADO
+            </span>
+          </div>
+        ) : (
+          <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex items-center justify-center">
+            <span className="px-5 py-2.5 bg-[#FF3E00] text-white text-xs font-black tracking-widest uppercase flex items-center gap-1.5">
+              VER DETALHES
+              <ArrowUpRight className="w-4 h-4" />
+            </span>
+          </div>
+        )}
       </div>
 
       {/* Info Container */}
@@ -143,9 +198,13 @@ export default function ProductCard({
       {/* Action Button at the bottom */}
       <div 
         onClick={onClickDetails}
-        className="bg-text-main text-bg-main p-4 flex justify-between items-center group-hover:bg-[#FF3E00] group-hover:text-white transition-all cursor-pointer font-black tracking-widest text-xs border-t border-border-subtle"
+        className={`p-4 flex justify-between items-center transition-all cursor-pointer font-black tracking-widest text-xs border-t border-border-subtle ${
+          product.stock === 0 
+            ? 'bg-bg-nested text-text-dim/80 hover:text-text-main hover:bg-bg-card' 
+            : 'bg-text-main text-bg-main group-hover:bg-[#FF3E00] group-hover:text-white'
+        }`}
       >
-        <span>DETALHES / ADQUIRIR</span>
+        <span>{product.stock === 0 ? 'VER DETALHES (ESGOTADO)' : 'DETALHES / ADQUIRIR'}</span>
         <span className="text-sm font-bold">{"->"}</span>
       </div>
     </motion.div>

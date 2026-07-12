@@ -116,6 +116,7 @@ export default function ProductModal({
   const [formError, setFormError] = useState<string>('');
   const [activeImageIndex, setActiveImageIndex] = useState<number>(0);
   const [copiedShare, setCopiedShare] = useState<boolean>(false);
+  const [showMobileReviews, setShowMobileReviews] = useState<boolean>(false);
 
   const additionalPhotos = getAdditionalImages(product.id, product.image);
 
@@ -156,6 +157,67 @@ export default function ProductModal({
     }
   };
 
+
+  const PhotosSection = (
+    <div className="border-b-2 md:border-b-0 md:border-dashed border-border-subtle pb-6 md:pb-8 mb-6 md:mb-0">
+      <h3 className="font-sans font-black text-text-main text-sm md:text-sm uppercase tracking-tighter mb-3 flex items-center gap-2">
+        <Camera className="w-4 h-4 text-[#FF3E00]" />
+        Fotos & Inspeção
+      </h3>
+      <p className="text-text-muted text-[10px] uppercase font-mono tracking-wider mb-4 leading-relaxed hidden md:block">
+        Selecione as miniaturas abaixo para inspecionar os detalhes reais do lote técnico:
+      </p>
+      
+      {/* Thumbnails grid */}
+      <div className="grid grid-cols-3 gap-2 md:gap-3 mb-4">
+        {additionalPhotos.map((photo, index) => {
+          const isActive = index === activeImageIndex;
+          return (
+            <button
+              key={`thumb-rt-${index}`}
+              onClick={() => {
+                setActiveImageIndex(index);
+                setIsZoomOpen(true);
+              }}
+              className={`group relative aspect-video border-2 overflow-hidden bg-bg-card transition-all duration-200 rounded-none ${
+                isActive 
+                  ? 'border-[#FF3E00]' 
+                  : 'border-border-subtle hover:border-border-subtle'
+              }`}
+              title={photo.label}
+            >
+              <img
+                src={photo.url}
+                alt={photo.label}
+                className="w-full h-full object-cover group-hover:scale-105 transition-all duration-300"
+                referrerPolicy="no-referrer"
+              />
+              <div className="absolute inset-x-0 bottom-0 bg-black/85 py-0.5 text-center">
+                <span className="text-[7.5px] font-black tracking-widest text-white uppercase block">
+                  {photo.label}
+                </span>
+              </div>
+            </button>
+          );
+        })}
+      </div>
+
+      {/* Selected Photo Rich assessment with click-to-zoom indication */}
+      <div 
+        onClick={() => setIsZoomOpen(true)}
+        className="bg-bg-main border border-border-subtle hover:border-[#FF3E00] p-3 md:p-4 flex items-center gap-3 rounded-none font-mono cursor-pointer transition-all duration-150"
+        title="Clique para ver em tela cheia"
+      >
+        <Package className="w-4 h-4 md:w-5 md:h-5 text-[#FF3E00] shrink-0" />
+        <div className="flex-1">
+          <span className="text-[10px] font-black text-[#FF3E00] tracking-widest block uppercase">
+            {additionalPhotos[activeImageIndex].label} // CLIQUE PARA AMPLIAR
+          </span>
+        </div>
+      </div>
+    </div>
+  );
+
   return (
     <AnimatePresence>
       <div className="fixed inset-0 z-50 overflow-y-auto" id="product-detail-modal">
@@ -187,7 +249,10 @@ export default function ProductModal({
             </button>
 
             {/* Left Column: Media & Specs */}
-            <div className="w-full md:w-1/2 p-6 md:p-8 overflow-y-auto border-r border-border-subtle flex flex-col">
+            <div className="w-full md:w-1/2 p-5 md:p-8 overflow-y-auto md:border-r border-border-subtle flex flex-col">
+              <div className="block md:hidden">
+                {PhotosSection}
+              </div>
               <div>
                 <div className="flex justify-between items-start mb-4">
                   <div>
@@ -413,21 +478,29 @@ export default function ProductModal({
                     </motion.div>
                   ) : (
                     <div className="flex flex-col sm:flex-row gap-3">
-                      <button
-                        id="btn-add-to-cart-modal"
-                        onClick={() => onAddToCart(product)}
-                        className="flex-1 py-4 bg-text-main hover:opacity-90 text-bg-main font-black tracking-widest text-xs rounded-none transition-all duration-200 flex items-center justify-center gap-2 border-2 border-text-main active:translate-y-0.5"
-                      >
-                        <ShoppingBag className="w-4 h-4" />
-                        ADD CARRINHO
-                      </button>
-                      <button
-                        id="btn-buy-simulator"
-                        onClick={handleCheckoutSimulator}
-                        className="flex-1 py-4 bg-[#FF3E00] hover:bg-[#ff551f] text-white font-black tracking-widest text-xs rounded-none transition-all duration-200 flex items-center justify-center gap-2 border-2 border-transparent active:translate-y-0.5"
-                      >
-                        SIMULAR COMPRA
-                      </button>
+                      {product.stock === 0 ? (
+                        <div className="w-full py-4 bg-black border-2 border-border-subtle text-white font-black tracking-widest text-xs text-center uppercase select-none">
+                          PRODUTO ESGOTADO / INDISPONÍVEL
+                        </div>
+                      ) : (
+                        <>
+                          <button
+                            id="btn-add-to-cart-modal"
+                            onClick={() => onAddToCart(product)}
+                            className="flex-1 py-4 bg-text-main hover:opacity-90 text-bg-main font-black tracking-widest text-xs rounded-none transition-all duration-200 flex items-center justify-center gap-2 border-2 border-text-main active:translate-y-0.5"
+                          >
+                            <ShoppingBag className="w-4 h-4" />
+                            ADD CARRINHO
+                          </button>
+                          <button
+                            id="btn-buy-simulator"
+                            onClick={handleCheckoutSimulator}
+                            className="flex-1 py-4 bg-[#FF3E00] hover:bg-[#ff551f] text-white font-black tracking-widest text-xs rounded-none transition-all duration-200 flex items-center justify-center gap-2 border-2 border-transparent active:translate-y-0.5"
+                          >
+                            SIMULAR COMPRA
+                          </button>
+                        </>
+                      )}
                     </div>
                   )}
 
@@ -448,74 +521,27 @@ export default function ProductModal({
             {/* Right Column: Photos and Reviews */}
             <div className="w-full md:w-1/2 p-6 md:p-8 overflow-y-auto flex flex-col bg-bg-nested space-y-8">
               
-              {/* Part 1: Fotos Adicionais & Inspeção moved to the right side! */}
-              <div className="border-b-2 border-dashed border-border-subtle pb-8">
-                <h3 className="font-sans font-black text-text-main text-sm uppercase tracking-tighter mb-3 flex items-center gap-2">
-                  <Camera className="w-4 h-4 text-[#FF3E00]" />
-                  Fotos Adicionais & Inspeção
-                </h3>
-                <p className="text-text-muted text-[10px] uppercase font-mono tracking-wider mb-4 leading-relaxed">
-                  Selecione as miniaturas abaixo para inspecionar os detalhes reais do lote técnico:
-                </p>
-                
-                {/* Thumbnails grid */}
-                <div className="grid grid-cols-3 gap-3 mb-4">
-                  {additionalPhotos.map((photo, index) => {
-                    const isActive = index === activeImageIndex;
-                    return (
-                      <button
-                        key={`thumb-rt-${index}`}
-                        onClick={() => {
-                          setActiveImageIndex(index);
-                          setIsZoomOpen(true);
-                        }}
-                        className={`group relative aspect-video border-2 overflow-hidden bg-bg-card transition-all duration-200 rounded-none ${
-                          isActive 
-                            ? 'border-[#FF3E00]' 
-                            : 'border-border-subtle hover:border-border-subtle'
-                        }`}
-                        title={photo.label}
-                      >
-                        <img
-                          src={photo.url}
-                          alt={photo.label}
-                          className="w-full h-full object-cover group-hover:scale-105 transition-all duration-300"
-                          referrerPolicy="no-referrer"
-                        />
-                        <div className="absolute inset-x-0 bottom-0 bg-black/85 py-0.5 text-center">
-                          <span className="text-[7.5px] font-black tracking-widest text-white uppercase block">
-                            {photo.label}
-                          </span>
-                        </div>
-                      </button>
-                    );
-                  })}
-                </div>
-
-                {/* Selected Photo Rich assessment with click-to-zoom indication */}
-                <div 
-                  onClick={() => setIsZoomOpen(true)}
-                  className="bg-bg-main border border-border-subtle hover:border-[#FF3E00] p-4 flex items-start gap-3 rounded-none font-mono cursor-pointer transition-all duration-150"
-                  title="Clique para ver em tela cheia"
-                >
-                  <Package className="w-5 h-5 text-[#FF3E00] shrink-0 mt-0.5" />
-                  <div className="flex-1">
-                    <span className="text-[10px] font-black text-[#FF3E00] tracking-widest block uppercase mb-1">
-                      {additionalPhotos[activeImageIndex].label} // VISTORIA TÉCNICA (CLIQUE PARA AMPLIAR)
-                    </span>
-                    <p className="text-[10px] text-text-muted uppercase leading-relaxed">
-                      {additionalPhotos[activeImageIndex].description}
-                    </p>
-                  </div>
-                </div>
+              <div className="hidden md:block">
+                {PhotosSection}
               </div>
 
               {/* Part 2: Comentários & Críticas */}
               <div>
-                <h3 className="font-sans font-black text-text-main text-lg uppercase tracking-tighter mb-4 flex items-center gap-2">
+                <h3 className="font-sans font-black text-text-main text-base md:text-lg uppercase tracking-tighter mb-4 flex items-center gap-2">
                   <MessageSquare className="w-4 h-4 text-[#FF3E00]" />
                   Comentários & Críticas ({productReviews.length})
                 </h3>
+
+                <div className="block md:hidden mb-4">
+                  <button
+                    onClick={() => setShowMobileReviews(!showMobileReviews)}
+                    className="w-full py-3 bg-bg-input border border-border-subtle text-text-main font-black tracking-widest text-[10px] uppercase flex items-center justify-center gap-2 rounded-none"
+                  >
+                    {showMobileReviews ? 'OCULTAR AVALIAÇÕES' : 'VER AVALIAÇÕES DO PRODUTO'}
+                  </button>
+                </div>
+
+                <div className={`${showMobileReviews ? 'block' : 'hidden'} md:block`}>
 
                 {/* Dynamic Average Card */}
                 <div className="bg-bg-card rounded-none p-4 border border-border-subtle mb-6 flex items-center justify-between">
@@ -591,6 +617,7 @@ export default function ProductModal({
                   <p className="text-[10px] text-[#FF3E00] font-mono uppercase">
                     Use o botão "Simular Compra" ao lado para testar!
                   </p>
+                </div>
                 </div>
               </div>
             </div>
