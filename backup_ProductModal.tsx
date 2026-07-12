@@ -175,7 +175,7 @@ export default function ProductModal({
             animate={{ opacity: 1, scale: 1 }}
             exit={{ opacity: 0, scale: 0.95 }}
             transition={{ duration: 0.25 }}
-            className="relative w-full max-w-5xl bg-bg-main border-2 border-border-subtle rounded-none shadow-2xl overflow-hidden flex flex-col md:flex-row max-h-[90vh] md:max-h-[85vh] z-50 text-text-main"
+            className="relative w-full max-w-5xl bg-bg-main border-2 border-border-main rounded-none shadow-2xl overflow-hidden flex flex-col md:flex-row max-h-[90vh] md:max-h-[85vh] z-50 text-text-main"
           >
             {/* Close Button */}
             <button
@@ -188,63 +188,144 @@ export default function ProductModal({
 
             {/* Left Column: Media & Specs */}
             <div className="w-full md:w-1/2 p-6 md:p-8 overflow-y-auto border-r border-border-subtle flex flex-col">
-              <div>
-                <div className="flex justify-between items-start mb-4">
-                  <div>
-                    <span className="text-[10px] font-black text-[#FF3E00] tracking-[0.2em] uppercase mb-1.5 block">
-                      {product.category}
-                    </span>
-                    <h2 className="font-sans font-black text-text-main text-3xl md:text-4xl tracking-tighter uppercase">
-                      {product.name}
-                    </h2>
-                  </div>
-                  <div className="flex gap-2 shrink-0 ml-4">
-                    <button
-                      id="btn-fav-modal"
-                      onClick={onToggleFavorite}
-                      className={`p-3 rounded-none transition-all duration-200 border-2 ${
-                        isFavorite 
-                          ? 'bg-[#FF3E00] border-[#FF3E00] text-white' 
-                          : 'bg-bg-card border-border-subtle text-text-main hover:border-[#FF3E00] hover:text-[#FF3E00]'
-                      }`}
-                      title={isFavorite ? "Remover dos Favoritos" : "Adicionar aos Favoritos"}
-                    >
-                      <Star
-                        className={`w-5 h-5 ${isFavorite ? 'fill-white text-white' : ''}`}
-                      />
-                    </button>
+              {/* Clickable Big Image for Zooming */}
+              <div 
+                onClick={() => setIsZoomOpen(true)}
+                className="relative rounded-none overflow-hidden bg-bg-nested h-64 md:h-80 mb-6 border-2 border-[#FF3E00]/30 hover:border-[#FF3E00] cursor-pointer group transition-all duration-200"
+                title="Clique para ampliar esta foto"
+              >
+                <img
+                  src={additionalPhotos[activeImageIndex]?.url || product.image}
+                  alt={product.name}
+                  className="w-full h-full object-cover group-hover:scale-[1.03] transition-all duration-300"
+                  referrerPolicy="no-referrer"
+                />
+                
+                {/* Top overlay action buttons (stoppropagation so we can click them without opening zoom) */}
+                <div className="absolute top-4 left-4 flex gap-2 z-10" onClick={(e) => e.stopPropagation()}>
+                  <button
+                    id="btn-fav-modal"
+                    onClick={onToggleFavorite}
+                    className={`p-3 rounded-none transition-all duration-200 border-2 ${
+                      isFavorite 
+                        ? 'bg-[#FF3E00] border-[#FF3E00] text-white' 
+                        : 'bg-bg-card border-border-subtle text-text-main hover:border-[#FF3E00] hover:text-[#FF3E00]'
+                    }`}
+                    title={isFavorite ? "Remover dos Favoritos" : "Adicionar aos Favoritos"}
+                  >
+                    <Star
+                      className={`w-5 h-5 ${isFavorite ? 'fill-white text-white' : ''}`}
+                    />
+                  </button>
 
-                    <button
-                      id="btn-share-modal"
-                      onClick={() => {
-                        const shareText = `Confira este produto incrível no Tech_Core: ${product.name} com 45% de desconto! ${window.location.origin}/?product=${product.id}`;
-                        navigator.clipboard.writeText(shareText).then(() => {
-                          setCopiedShare(true);
-                          setTimeout(() => setCopiedShare(false), 2000);
-                        }).catch(() => {
-                          setCopiedShare(true);
-                          setTimeout(() => setCopiedShare(false), 2000);
-                        });
-                      }}
-                      className="p-3 rounded-none transition-all duration-200 border-2 bg-bg-card border-border-subtle text-text-main hover:border-[#FF3E00] hover:text-[#FF3E00] relative flex items-center justify-center"
-                      title="Compartilhar produto"
-                    >
-                      <Share2 className="w-5 h-5" />
-                      <AnimatePresence>
-                        {copiedShare && (
-                          <motion.span
-                            initial={{ opacity: 0, y: 10, scale: 0.9 }}
-                            animate={{ opacity: 1, y: 0, scale: 1 }}
-                            exit={{ opacity: 0, y: -10, scale: 0.9 }}
-                            className="absolute right-full mr-2 px-2 py-1 bg-text-main text-bg-main text-[9px] font-black uppercase whitespace-nowrap border border-border-subtle z-20"
-                          >
-                            COPIADO!
-                          </motion.span>
-                        )}
-                      </AnimatePresence>
-                    </button>
+                  <button
+                    id="btn-share-modal"
+                    onClick={() => {
+                      const shareText = `Confira este produto incrível no Tech_Core: ${product.name} com 45% de desconto! ${window.location.origin}/?product=${product.id}`;
+                      navigator.clipboard.writeText(shareText).then(() => {
+                        setCopiedShare(true);
+                        setTimeout(() => setCopiedShare(false), 2000);
+                      }).catch(() => {
+                        setCopiedShare(true);
+                        setTimeout(() => setCopiedShare(false), 2000);
+                      });
+                    }}
+                    className="p-3 rounded-none transition-all duration-200 border-2 bg-bg-card border-border-subtle text-text-main hover:border-[#FF3E00] hover:text-[#FF3E00] relative flex items-center justify-center"
+                    title="Compartilhar produto"
+                  >
+                    <Share2 className="w-5 h-5" />
+                    <AnimatePresence>
+                      {copiedShare && (
+                        <motion.span
+                          initial={{ opacity: 0, y: 10, scale: 0.9 }}
+                          animate={{ opacity: 1, y: 0, scale: 1 }}
+                          exit={{ opacity: 0, y: -10, scale: 0.9 }}
+                          className="absolute left-full ml-2 px-2 py-1 bg-text-main text-bg-main text-[9px] font-black uppercase whitespace-nowrap border border-border-main z-20"
+                        >
+                          COPIADO!
+                        </motion.span>
+                      )}
+                    </AnimatePresence>
+                  </button>
+                </div>
+
+                {/* Hover zoom message overlay */}
+                <div className="absolute inset-0 bg-black/45 opacity-0 group-hover:opacity-100 transition-opacity duration-200 flex flex-col items-center justify-center pointer-events-none text-white text-center">
+                  <div className="bg-[#FF3E00] text-white border-2 border-white px-4 py-2 font-mono text-[10px] font-black tracking-widest uppercase flex items-center gap-2">
+                    <Camera className="w-4 h-4 animate-pulse" />
+                    CLIQUE PARA AMPLIAR (ZOOM)
                   </div>
                 </div>
+              </div>
+
+              {/* Fotos Adicionais & Inspeção moved to the left side right under the main photo! */}
+              <div className="border-b-2 border-dashed border-border-subtle pb-6 mb-6">
+                <h3 className="font-sans font-black text-text-main text-sm uppercase tracking-tighter mb-3 flex items-center gap-2">
+                  <Camera className="w-4 h-4 text-[#FF3E00]" />
+                  Fotos Adicionais & Inspeção
+                </h3>
+                <p className="text-text-muted text-[10px] uppercase font-mono tracking-wider mb-3 leading-relaxed">
+                  Selecione as miniaturas abaixo para inspecionar os detalhes reais do lote técnico (clique no lote ou na foto principal para ampliar):
+                </p>
+                
+                {/* Thumbnails grid */}
+                <div className="grid grid-cols-3 gap-2.5 mb-3">
+                  {additionalPhotos.map((photo, index) => {
+                    const isActive = index === activeImageIndex;
+                    return (
+                      <button
+                        key={`thumb-${index}`}
+                        onClick={() => {
+                          setActiveImageIndex(index);
+                        }}
+                        className={`group relative aspect-video border-2 overflow-hidden bg-bg-card transition-all duration-200 rounded-none ${
+                          isActive 
+                            ? 'border-[#FF3E00]' 
+                            : 'border-border-subtle hover:border-border-main'
+                        }`}
+                        title={photo.label}
+                      >
+                        <img
+                          src={photo.url}
+                          alt={photo.label}
+                          className="w-full h-full object-cover group-hover:scale-105 transition-all duration-300"
+                          referrerPolicy="no-referrer"
+                        />
+                        <div className="absolute inset-x-0 bottom-0 bg-black/85 py-0.5 text-center">
+                          <span className="text-[7.5px] font-black tracking-widest text-white uppercase block">
+                            {photo.label}
+                          </span>
+                        </div>
+                      </button>
+                    );
+                  })}
+                </div>
+
+                {/* Selected Photo Rich assessment with click-to-zoom indication */}
+                <div 
+                  onClick={() => setIsZoomOpen(true)}
+                  className="bg-bg-nested border border-border-subtle hover:border-[#FF3E00] p-3 flex items-start gap-2.5 rounded-none font-mono cursor-pointer transition-all duration-150"
+                  title="Clique para ver em tela cheia"
+                >
+                  <Package className="w-4 h-4 text-[#FF3E00] shrink-0 mt-0.5" />
+                  <div className="flex-1">
+                    <span className="text-[9.5px] font-black text-[#FF3E00] tracking-widest block uppercase mb-0.5">
+                      {additionalPhotos[activeImageIndex].label} // VISTORIA TÉCNICA (CLIQUE PARA VER ZOOM)
+                    </span>
+                    <p className="text-[9.5px] text-text-muted uppercase leading-relaxed">
+                      {additionalPhotos[activeImageIndex].description}
+                    </p>
+                  </div>
+                </div>
+              </div>
+
+              <div>
+                <span className="text-[10px] font-black text-[#FF3E00] tracking-[0.2em] uppercase mb-1.5 block">
+                  {product.category}
+                </span>
+                <h2 className="font-sans font-black text-text-main text-3xl md:text-4xl tracking-tighter uppercase mb-4">
+                  {product.name}
+                </h2>
                 <p className="text-text-muted leading-relaxed mb-5 text-xs">
                   {product.description}
                 </p>
@@ -297,7 +378,7 @@ export default function ProductModal({
                   {/* Pricing comparison box */}
                   <div className="bg-bg-nested border border-border-subtle p-4 mb-4 flex flex-col gap-2">
                     <div className="flex items-center justify-between text-xs">
-                      <span className="text-text-dim font-black tracking-widest uppercase text-[9px]">PREÇO ORIGINAL</span>
+                      <span className="text-text-dim font-black tracking-widest uppercase text-[9px]">PREÇO RECOMENDADO</span>
                       <span className="text-text-dim line-through font-mono">
                         R$ {product.price.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
                       </span>
@@ -436,7 +517,7 @@ export default function ProductModal({
                     href={product.originalLink}
                     target="_blank"
                     rel="noopener noreferrer"
-                    className="w-full py-3.5 bg-bg-input hover:bg-bg-card text-text-main font-black tracking-widest text-xs rounded-none transition-all duration-200 flex items-center justify-center gap-2 border border-border-subtle hover:border-border-subtle"
+                    className="w-full py-3.5 bg-bg-input hover:bg-bg-card text-text-main font-black tracking-widest text-xs rounded-none transition-all duration-200 flex items-center justify-center gap-2 border border-border-subtle hover:border-border-main"
                   >
                     <ExternalLink className="w-4 h-4 text-[#FF3E00]" />
                     PÁGINA ORIGINAL DO FABRICANTE
@@ -445,71 +526,9 @@ export default function ProductModal({
               </div>
             </div>
 
-            {/* Right Column: Photos and Reviews */}
-            <div className="w-full md:w-1/2 p-6 md:p-8 overflow-y-auto flex flex-col bg-bg-nested space-y-8">
+            {/* Right Column: Reviews only (Photos are now on the Left column under the main image) */}
+            <div className="w-full md:w-1/2 p-6 md:p-8 overflow-y-auto flex flex-col bg-bg-nested space-y-6">
               
-              {/* Part 1: Fotos Adicionais & Inspeção moved to the right side! */}
-              <div className="border-b-2 border-dashed border-border-subtle pb-8">
-                <h3 className="font-sans font-black text-text-main text-sm uppercase tracking-tighter mb-3 flex items-center gap-2">
-                  <Camera className="w-4 h-4 text-[#FF3E00]" />
-                  Fotos Adicionais & Inspeção
-                </h3>
-                <p className="text-text-muted text-[10px] uppercase font-mono tracking-wider mb-4 leading-relaxed">
-                  Selecione as miniaturas abaixo para inspecionar os detalhes reais do lote técnico:
-                </p>
-                
-                {/* Thumbnails grid */}
-                <div className="grid grid-cols-3 gap-3 mb-4">
-                  {additionalPhotos.map((photo, index) => {
-                    const isActive = index === activeImageIndex;
-                    return (
-                      <button
-                        key={`thumb-rt-${index}`}
-                        onClick={() => {
-                          setActiveImageIndex(index);
-                          setIsZoomOpen(true);
-                        }}
-                        className={`group relative aspect-video border-2 overflow-hidden bg-bg-card transition-all duration-200 rounded-none ${
-                          isActive 
-                            ? 'border-[#FF3E00]' 
-                            : 'border-border-subtle hover:border-border-subtle'
-                        }`}
-                        title={photo.label}
-                      >
-                        <img
-                          src={photo.url}
-                          alt={photo.label}
-                          className="w-full h-full object-cover group-hover:scale-105 transition-all duration-300"
-                          referrerPolicy="no-referrer"
-                        />
-                        <div className="absolute inset-x-0 bottom-0 bg-black/85 py-0.5 text-center">
-                          <span className="text-[7.5px] font-black tracking-widest text-white uppercase block">
-                            {photo.label}
-                          </span>
-                        </div>
-                      </button>
-                    );
-                  })}
-                </div>
-
-                {/* Selected Photo Rich assessment with click-to-zoom indication */}
-                <div 
-                  onClick={() => setIsZoomOpen(true)}
-                  className="bg-bg-main border border-border-subtle hover:border-[#FF3E00] p-4 flex items-start gap-3 rounded-none font-mono cursor-pointer transition-all duration-150"
-                  title="Clique para ver em tela cheia"
-                >
-                  <Package className="w-5 h-5 text-[#FF3E00] shrink-0 mt-0.5" />
-                  <div className="flex-1">
-                    <span className="text-[10px] font-black text-[#FF3E00] tracking-widest block uppercase mb-1">
-                      {additionalPhotos[activeImageIndex].label} // VISTORIA TÉCNICA (CLIQUE PARA AMPLIAR)
-                    </span>
-                    <p className="text-[10px] text-text-muted uppercase leading-relaxed">
-                      {additionalPhotos[activeImageIndex].description}
-                    </p>
-                  </div>
-                </div>
-              </div>
-
               {/* Part 2: Comentários & Críticas */}
               <div>
                 <h3 className="font-sans font-black text-text-main text-lg uppercase tracking-tighter mb-4 flex items-center gap-2">

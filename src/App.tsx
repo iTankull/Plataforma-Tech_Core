@@ -104,8 +104,27 @@ export default function App(): React.JSX.Element {
   }, [theme]);
 
   // --- Persistent States ---
-  const [products, setProducts] = useState<Product[]>([]);
-  const [reviews, setReviews] = useState<Review[]>([]);
+  const [products, setProducts] = useState<Product[]>(() => {
+    const storedProducts = localStorage.getItem('tech_products');
+    if (storedProducts) {
+      try {
+        const parsed = JSON.parse(storedProducts);
+        if (parsed.length > 0 && parsed[0].stock !== undefined) {
+          return parsed;
+        }
+      } catch (e) {}
+    }
+    return DEFAULT_PRODUCTS;
+  });
+  const [reviews, setReviews] = useState<Review[]>(() => {
+    const storedReviews = localStorage.getItem('tech_reviews');
+    if (storedReviews) {
+      try {
+        return JSON.parse(storedReviews);
+      } catch(e) {}
+    }
+    return DEFAULT_REVIEWS;
+  });
   const [currentUser, setCurrentUser] = useState<User | null>(null);
   const [favorites, setFavorites] = useState<string[]>([]);
 
@@ -133,6 +152,7 @@ export default function App(): React.JSX.Element {
   const [selectedCategory, setSelectedCategory] = useState<string>('Todas');
   const [sortBy, setSortBy] = useState<string>('default');
   const [showFavoritesOnly, setShowFavoritesOnly] = useState<boolean>(false);
+  const [maxPriceFilter, setMaxPriceFilter] = useState<number>(6000);
 
   // --- UI Interactivity States ---
   const [selectedProduct, setSelectedProduct] = useState<Product | null>(null);
@@ -261,12 +281,13 @@ export default function App(): React.JSX.Element {
   };
 
   // --- Reviews Handlers ---
-  const handleAddReview = (rating: number, comment: string) => {
-    if (!selectedProduct || !currentUser) return;
+  const handleAddReview = (rating: number, comment: string, productId?: string) => {
+    const targetProductId = productId || selectedProduct?.id;
+    if (!targetProductId || !currentUser) return;
 
     const newReview: Review = {
       id: `rev-${Date.now()}`,
-      productId: selectedProduct.id,
+      productId: targetProductId,
       username: currentUser.name,
       rating,
       comment,
@@ -278,11 +299,11 @@ export default function App(): React.JSX.Element {
     localStorage.setItem('tech_reviews', JSON.stringify(updatedReviews));
 
     // Re-calculate the product rating dynamically
-    const productReviews = updatedReviews.filter(r => r.productId === selectedProduct.id);
+    const productReviews = updatedReviews.filter(r => r.productId === targetProductId);
     const avgRating = productReviews.reduce((sum, r) => sum + r.rating, 0) / productReviews.length;
 
     const updatedProducts = products.map((prod) => {
-      if (prod.id === selectedProduct.id) {
+      if (prod.id === targetProductId) {
         return { ...prod, rating: avgRating };
       }
       return prod;
@@ -291,7 +312,9 @@ export default function App(): React.JSX.Element {
     localStorage.setItem('tech_products', JSON.stringify(updatedProducts));
 
     // Update selected product state
-    setSelectedProduct({ ...selectedProduct, rating: avgRating });
+    if (selectedProduct && selectedProduct.id === targetProductId) {
+      setSelectedProduct({ ...selectedProduct, rating: avgRating });
+    }
     triggerNotification('Sua crítica foi publicada com sucesso!', 'success');
   };
 
@@ -446,6 +469,11 @@ export default function App(): React.JSX.Element {
       });
     }
 
+    // Price Filter
+    if (maxPriceFilter < 6000) {
+      result = result.filter((p) => p.price <= maxPriceFilter);
+    }
+
     // Sort Logic
     if (sortBy === 'price-asc') {
       result.sort((a, b) => a.price - b.price);
@@ -456,7 +484,7 @@ export default function App(): React.JSX.Element {
     }
 
     return result;
-  }, [products, selectedCategory, showFavoritesOnly, searchQuery, favorites, sortBy]);
+  }, [products, selectedCategory, showFavoritesOnly, searchQuery, favorites, sortBy, maxPriceFilter]);
 
   return (
     <div className="min-h-screen bg-bg-main text-text-main font-sans antialiased selection:bg-[#FF3E00] selection:text-white pb-16">
@@ -685,7 +713,7 @@ export default function App(): React.JSX.Element {
               <span className="text-[#FF3E00]">COM DESCONTO_</span>
             </h2>
             <p className="text-text-muted text-xs md:text-sm leading-relaxed max-w-lg font-mono">
-              Seja bem-vindo ao meu catálogo pessoal de revendas de tecnologia! São itens em estado de novo, impecáveis ou de outlet, que adquiri e agora estou revendendo bem abaixo do valor original de mercado. Todos contam com o desconto padrão incrível de 45% já aplicado sobre o valor de referência original.
+              Catálogo pessoal de itens tech novos e outlet. Desconto de 45% já aplicado em todos os produtos.
             </p>
           </div>
 
@@ -809,6 +837,26 @@ export default function App(): React.JSX.Element {
               </button>
             )}
 
+            
+            {/* Mobile Price Slider */}
+            <div className="w-full flex-1 flex flex-col justify-center border-t border-border-very-subtle sm:border-none sm:border-l sm:pl-3 pt-3 sm:pt-0">
+              <div className="flex justify-between items-center mb-1">
+                <label className="text-[9px] font-black tracking-widest text-text-dim uppercase">PREÇO MÁX</label>
+                <span className="text-[10px] font-black text-[#FF3E00]">
+                  {maxPriceFilter >= 6000 ? 'QUALQUER' : `R$ ${maxPriceFilter.toLocaleString('pt-BR')}`}
+                </span>
+              </div>
+              <input 
+                type="range" 
+                min="0" 
+                max="6000" 
+                step="100"
+                value={maxPriceFilter}
+                onChange={(e) => setMaxPriceFilter(Number(e.target.value))}
+                className="w-full accent-[#FF3E00] cursor-pointer"
+              />
+            </div>
+
             {/* Exhibition Order Selection */}
             <div className="relative flex-1">
               <select
@@ -826,7 +874,7 @@ export default function App(): React.JSX.Element {
             </div>
 
             {/* Clear filters trigger */}
-            {(searchQuery || selectedCategory !== 'Todas' || showFavoritesOnly || sortBy !== 'default') && (
+            {(searchQuery || selectedCategory !== 'Todas' || showFavoritesOnly || sortBy !== 'default' || maxPriceFilter < 6000) && (
               <button
                 id="mobile-btn-reset-filters"
                 onClick={() => {
@@ -834,6 +882,7 @@ export default function App(): React.JSX.Element {
                   setSelectedCategory('Todas');
                   setShowFavoritesOnly(false);
                   setSortBy('default');
+                  setMaxPriceFilter(6000);
                   triggerNotification('Todos os filtros e buscas limpos', 'info');
                 }}
                 className="py-2.5 px-4 bg-[#FF3E00]/10 hover:bg-[#FF3E00] text-[#FF3E00] hover:text-white text-[10px] font-black tracking-widest uppercase border-2 border-[#FF3E00]/20 hover:border-[#FF3E00] transition-all rounded-none"
@@ -908,6 +957,26 @@ export default function App(): React.JSX.Element {
                 </div>
               )}
 
+              
+              {/* Desktop Price Slider */}
+              <div className="pt-2">
+                <div className="flex justify-between items-center mb-2">
+                  <label className="text-[9px] font-black tracking-widest text-text-dim uppercase block">PREÇO MÁX</label>
+                  <span className="text-[10px] font-black text-[#FF3E00]">
+                    {maxPriceFilter >= 6000 ? 'QUALQUER' : `R$ ${maxPriceFilter.toLocaleString('pt-BR')}`}
+                  </span>
+                </div>
+                <input 
+                  type="range" 
+                  min="0" 
+                  max="6000" 
+                  step="100"
+                  value={maxPriceFilter}
+                  onChange={(e) => setMaxPriceFilter(Number(e.target.value))}
+                  className="w-full accent-[#FF3E00] cursor-pointer"
+                />
+              </div>
+
               {/* Sort selector stylized */}
               <div>
                 <label className="text-[9px] font-black tracking-widest text-text-dim uppercase block mb-2">ORDEM DE EXIBIÇÃO</label>
@@ -928,14 +997,15 @@ export default function App(): React.JSX.Element {
               </div>
 
               {/* Clear filters trigger */}
-              {(searchQuery || selectedCategory !== 'Todas' || showFavoritesOnly || sortBy !== 'default') && (
+              {(searchQuery || selectedCategory !== 'Todas' || showFavoritesOnly || sortBy !== 'default' || maxPriceFilter < 6000) && (
                 <button
                   id="btn-reset-filters"
                   onClick={() => {
                     setSearchQuery('');
                     setSelectedCategory('Todas');
                     setShowFavoritesOnly(false);
-                    setSortBy('default');
+                  setSortBy('default');
+                  setMaxPriceFilter(6000);
                     triggerNotification('Todos os filtros e buscas limpos', 'info');
                   }}
                   className="w-full py-2 bg-bg-nested hover:bg-bg-card text-text-main text-[10px] font-black tracking-widest uppercase border border-border-subtle"
@@ -950,7 +1020,7 @@ export default function App(): React.JSX.Element {
           <div className="flex-1 w-full">
             
             {/* Active search tag and counts */}
-            {(searchQuery || selectedCategory !== 'Todas' || showFavoritesOnly || sortBy !== 'default') && (
+            {(searchQuery || selectedCategory !== 'Todas' || showFavoritesOnly || sortBy !== 'default' || maxPriceFilter < 6000) && (
               <div className="bg-bg-card border border-border-subtle p-4 mb-6 text-xs font-mono flex items-center justify-between flex-wrap gap-2">
                 <div className="flex items-center gap-2 text-text-muted">
                   <Info className="w-4 h-4 text-[#FF3E00]" />
@@ -965,9 +1035,10 @@ export default function App(): React.JSX.Element {
             )}
 
             {/* Products listings render area */}
-            <AnimatePresence mode="popLayout">
-              {filteredAndSortedProducts.length === 0 ? (
+            {filteredAndSortedProducts.length === 0 ? (
+              <AnimatePresence mode="popLayout">
                 <motion.div
+                  key="empty-state"
                   initial={{ opacity: 0 }}
                   animate={{ opacity: 1 }}
                   exit={{ opacity: 0 }}
@@ -985,18 +1056,20 @@ export default function App(): React.JSX.Element {
                       setSelectedCategory('Todas');
                       setShowFavoritesOnly(false);
                       setSortBy('default');
+                      setMaxPriceFilter(6000);
                     }}
                     className="px-5 py-3 bg-[#FF3E00] hover:bg-[#ff551f] text-white text-[10px] font-black tracking-widest uppercase"
                   >
                     EXIBIR TODOS OS PRODUTOS
                   </button>
                 </motion.div>
-              ) : (
-                <motion.div
-                  id="products-grid-container"
-                  layout
-                  className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-6 md:gap-8"
-                >
+              </AnimatePresence>
+            ) : (
+              <div
+                id="products-grid-container"
+                className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-6 md:gap-8"
+              >
+                <AnimatePresence>
                   {filteredAndSortedProducts.map((product) => (
                     <ProductCard
                       key={product.id}
@@ -1006,9 +1079,9 @@ export default function App(): React.JSX.Element {
                       onClickDetails={() => setSelectedProduct(product)}
                     />
                   ))}
-                </motion.div>
-              )}
-            </AnimatePresence>
+                </AnimatePresence>
+              </div>
+            )}
 
           </div>
         </div>

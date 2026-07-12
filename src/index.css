@@ -79,3 +79,18 @@ html[data-theme="dark"] {
   scrollbar-width: none;  /* Firefox */
 }
 
+
+/* Global scrollbar styles */
+::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+::-webkit-scrollbar-track {
+  background: var(--bg-nested);
+}
+::-webkit-scrollbar-thumb {
+  background: var(--border-subtle);
+}
+::-webkit-scrollbar-thumb:hover {
+  background: var(--text-dim);
+}

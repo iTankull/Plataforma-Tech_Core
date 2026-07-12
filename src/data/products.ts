@@ -9,7 +9,7 @@ export const DEFAULT_PRODUCTS: Product[] = [
     rating: 4.8,
     originalLink: 'https://www.keychron.com/products/keychron-k2-pro-qmk-via-wireless-mechanical-keyboard',
     description: 'Teclado mecânico sem fio compacto (75%) com switches Keychron K Pro pré-lubrificados, keycaps PBT double-shot e retroiluminação RGB de alta intensidade. Excelente para digitação e produtividade.',
-    image: 'https://images.unsplash.com/photo-1587829741301-dc798b83add3?auto=format&fit=crop&q=80&w=600',
+    image: 'https://cdn.shopify.com/s/files/1/0059/0630/1017/files/Keychron-K2-wireless-mechanical-keyboard-3.jpg?v=1691568464',
     specs: {
       'Layout': 'ANSI / ISO QMK/VIA',
       'Switches': 'Keychron K Pro Brown (Tátil)',
@@ -28,7 +28,7 @@ export const DEFAULT_PRODUCTS: Product[] = [
     rating: 4.9,
     originalLink: 'https://www.gloriousgaming.com/products/gmmk-pro-75-barebone-black',
     description: 'Teclado mecânico barebone premium de montagem em junta (gasket mount) com chapa de alumínio usinado CNC, knob rotativo codificado e iluminação lateral exclusiva.',
-    image: 'https://images.unsplash.com/photo-1618384887929-16ec33fab9ef?auto=format&fit=crop&q=80&w=600',
+    image: 'https://microless.com/cdn/products/a88e5b066c5294740e2200d3c0d39da7-hi.jpg',
     specs: {
       'Material': 'Alumínio Usinado CNC',
       'Layout': '75% Layout US',
@@ -47,7 +47,7 @@ export const DEFAULT_PRODUCTS: Product[] = [
     rating: 4.7,
     originalLink: 'https://www.sony.com.br/electronics/cameras-lentes-amoviveis/ilce-6400',
     description: 'Câmera digital Mirrorless avançada com sensor APS-C de 24.2 MP, foco automático ultra-rápido de 0.02s com Real-time Eye AF, gravação de vídeo em 4K HDR e tela LCD articulada inclinável a 180° para vlogging.',
-    image: 'https://images.unsplash.com/photo-1516035069371-29a1b244cc32?auto=format&fit=crop&q=80&w=600',
+    image: 'https://pisces.bbystatic.com/image2/BestBuy_US/images/products/6324/6324859ld.jpg',
     specs: {
       'Sensor': '24.2 MP APS-C Exmor CMOS',
       'Processador': 'BIONZ X',
@@ -66,7 +66,7 @@ export const DEFAULT_PRODUCTS: Product[] = [
     rating: 4.6,
     originalLink: 'https://www.canon.com.br/produtos/produtos-para-voce/cameras/linha-eos-r/eos-r50',
     description: 'Câmera compacta ideal para criadores de conteúdo ativos, com autofoco Dual Pixel CMOS AF II inteligente que detecta pessoas, animais e veículos, gravação de vídeos em 4K sem cortes e conectividade impecável.',
-    image: 'https://images.unsplash.com/photo-1495707902641-75cac588d2e9?auto=format&fit=crop&q=80&w=600',
+    image: 'https://www.bhphotovideo.com/images/images1500x1500/canon_eos_r50_with_rf_s_1748812.jpg',
     specs: {
       'Sensor': '24.2 MP APS-C CMOS',
       'Foco': 'Dual Pixel CMOS AF II',
@@ -85,7 +85,7 @@ export const DEFAULT_PRODUCTS: Product[] = [
     rating: 4.9,
     originalLink: 'https://www.apple.com/br/apple-watch-series-9/',
     description: 'O relógio inteligente mais poderoso do mundo agora traz o novo chip S9, tela Retina Sempre Ativa de até 2000 nits, recurso revolucionário de Toque Duplo sem tocar na tela e inteligência de saúde avançada.',
-    image: 'https://images.unsplash.com/photo-1508685096489-7aacd43bd3b1?auto=format&fit=crop&q=80&w=600',
+    image: 'https://www.apple.com/newsroom/images/2023/09/apple-introduces-the-advanced-new-apple-watch-series-9/article/Apple-Watch-S9-silver-aluminum-Solo-Loop-olive-230912_inline.jpg.large_2x.jpg',
     specs: {
       'Processador': 'Chip S9 SiP de 64 bits',
       'Tela': 'Retina Sempre Ativa (Até 2000 nits)',
@@ -104,7 +104,7 @@ export const DEFAULT_PRODUCTS: Product[] = [
     rating: 4.8,
     originalLink: 'https://www.samsung.com/br/watches/galaxy-watch/galaxy-watch6-classic-47mm-black-lte-sm-r965fzkazto/',
     description: 'O clássico está de volta com uma coroa giratória física refinada e uma tela 20% maior. Oferece análise detalhada de sono, medição de composição corporal por bioimpedância e monitoramento de pressão arterial.',
-    image: 'https://images.unsplash.com/photo-1579586337278-3befd40fd17a?auto=format&fit=crop&q=80&w=600',
+    image: 'https://pisces.bbystatic.com/image2/BestBuy_US/images/products/6546/6546710cv11d.jpg',
     specs: {
       'Sistema': 'Wear OS powered by Samsung',
       'Material': 'Caixa em Aço Inoxidável',
@@ -123,7 +123,7 @@ export const DEFAULT_PRODUCTS: Product[] = [
     rating: 4.8,
     originalLink: 'https://www.shure.com/pt-BR/produtos/microfones/mv7',
     description: 'Inspirado no lendário SM7B, o Shure MV7 é um microfone dinâmico de alta fidelidade com conexões digitais USB e analógicas XLR. Possui tecnologia de isolamento de voz para gravações de estúdio limpas em qualquer ambiente.',
-    image: 'https://images.unsplash.com/photo-1590602847861-f357a9332bbc?auto=format&fit=crop&q=80&w=600',
+    image: 'https://www.bhphotovideo.com/images/images2500x2500/shure_mv7_k_podcast_microphone_1808586.jpg',
     specs: {
       'Tipo': 'Dinâmico',
       'Padrão Polar': 'Cardióide Unidirecional',
@@ -142,7 +142,7 @@ export const DEFAULT_PRODUCTS: Product[] = [
     rating: 4.7,
     originalLink: 'https://www.bluemic.com/en-us/products/yeti-x/',
     description: 'O microfone USB definitivo para streamers e podcasters. Equipado com matriz de condensador de 4 cápsulas, medidor de LED em tempo real de alta definição e efeitos vocais avançados via software Blue VO!CE.',
-    image: 'https://images.unsplash.com/photo-1512412086890-76151e49f220?auto=format&fit=crop&q=80&w=600',
+    image: 'https://imageio.forbes.com/specials-images/imageserve/5dc802202c886a0007ebccf0/Box-shot-of-Blue-Yeti-X/0x0.jpg',
     specs: {
       'Tipo': 'Condensador de 4 Cápsulas',
       'Padrões Polares': 'Cardióide, Omnidirecional, Bidirecional, Estéreo',
@@ -161,7 +161,7 @@ export const DEFAULT_PRODUCTS: Product[] = [
     rating: 4.9,
     originalLink: 'https://www.sony.com.br/electronics/headband-headphones/wh-1000xm5',
     description: 'Os headphones premium WH-1000XM5 redefinem o cancelamento de ruído e a qualidade de áudio sem fio. Apresentam dois processadores controlando oito microfones, otimizador automático de cancelamento de ruído e chamadas cristalinas.',
-    image: 'https://images.unsplash.com/photo-1505740420928-5e560c06d30e?auto=format&fit=crop&q=80&w=600',
+    image: 'https://img.freepik.com/premium-photo/isolated-sony-wh-1000xm5-wireless-headphones-front-view-featuring-white-background-clean_655090-801083.jpg?w=2000',
     specs: {
       'Conexão': 'Bluetooth 5.2 / P2 (3.5mm)',
       'Bateria': 'Até 30 horas com ANC ativo / 38 horas desligado',
@@ -180,7 +180,7 @@ export const DEFAULT_PRODUCTS: Product[] = [
     rating: 4.6,
     originalLink: 'https://www.lg.com/br/monitores/lg-34wp550-b',
     description: 'Aumente seu campo de visão e mergulhe em seus jogos e conteúdos favoritos com este monitor ultra-amplo em formato 21:9. Possui painel IPS de fidelidade extrema com HDR10 e taxa de atualização fluida.',
-    image: 'https://images.unsplash.com/photo-1527443224154-c4a3942d3acf?auto=format&fit=crop&q=80&w=600',
+    image: 'https://www.lg.com/content/dam/channel/wcms/ca_en/images/monitors/34g600a-b/gallery/ultragear-gaming-34g600a-2025-gallery-zoom-05.jpg',
     specs: {
       'Tamanho da Tela': '34 Polegadas UltraWide (21:9)',
       'Painel': 'IPS com 99% sRGB',
@@ -199,7 +199,7 @@ export const DEFAULT_PRODUCTS: Product[] = [
     rating: 4.9,
     originalLink: 'https://www.apple.com/br/airpods-pro/',
     description: 'Cancelamento Ativo de Ruído até duas vezes melhor, Transparência Adaptativa e Áudio Espacial Personalizado com rastreamento dinâmico da cabeça.',
-    image: 'https://images.unsplash.com/photo-1600294037681-c80b4cb5b434?auto=format&fit=crop&q=80&w=600',
+    image: 'https://i.pinimg.com/736x/42/d3/90/42d390c9c7c43e13810c9f6ffef4933d.jpg',
     specs: {
       'Estojo de recarga': 'MagSafe com alto-falante e entrada para cordão',
       'Chip': 'Apple H2',
@@ -217,7 +217,7 @@ export const DEFAULT_PRODUCTS: Product[] = [
     rating: 4.8,
     originalLink: 'https://www.logitech.com/pt-br/products/mice/mx-master-3s.910-006557.html',
     description: 'Mouse sem fio ergonômico de alta performance com cliques discretos e sensor de 8.000 DPI que rastreia em qualquer superfície, até mesmo vidro.',
-    image: 'https://images.unsplash.com/photo-1615663245857-ac93bb7c39e7?auto=format&fit=crop&q=80&w=600',
+    image: 'https://www.bhphotovideo.com/images/fb/logitech_910_006556_mx_master_3s_black_1703320.jpg',
     specs: {
       'Sensor': 'Darkfield de alta precisão de 8k DPI',
       'Botões': '7 botões personalizáveis com scroll inteligente MagSpeed',
@@ -235,7 +235,7 @@ export const DEFAULT_PRODUCTS: Product[] = [
     rating: 4.9,
     originalLink: 'https://store.steampowered.com/steamdeck',
     description: 'O PC portátil definitivo para jogos agora vem com tela HDR OLED de 7.4" de 90Hz, bateria com duração de até 50% maior e Wi-Fi 6E ultrarrápido.',
-    image: 'https://images.unsplash.com/photo-1669837401587-f9a4cdf3126e?auto=format&fit=crop&q=80&w=600',
+    image: 'https://www.pcworld.com/wp-content/uploads/2023/11/Steam-Deck-OLED-screen.jpg?quality=50https://images.unsplash.com/photo-1669837401587-f9a4cdf3126e?auto=format&fit=crop&q=80&w=600strip=all',
     specs: {
       'Tela': '7.4" HDR OLED 90Hz 1000 nits',
       'Processador': 'APU AMD de 6 nm (Zen 2 + RDNA 2)',
@@ -253,7 +253,7 @@ export const DEFAULT_PRODUCTS: Product[] = [
     rating: 4.7,
     originalLink: 'https://www.timemore.com/products/timemore-chestnut-c3-manual-coffee-grinder',
     description: 'Moedor manual de café de alta precisão com rebarbas cônicas de aço S2C 660 exclusivas. Ajuste ponto a ponto para espresso, coados e prensa francesa.',
-    image: 'https://images.unsplash.com/photo-1514432324607-a09d9b4aefdd?auto=format&fit=crop&q=80&w=600',
+    image: 'https://lazenskakava.s24.cdn-upgates.com/_cache/7/6/76038ad422b9040ffecfd2e5e32b6a7d-timemore-c3-esp.webp',
     specs: {
       'Material': 'Alumínio de aviação e rebarbas de aço inox',
       'Capacidade': 'Aproximadamente 25g de grãos',
@@ -271,7 +271,7 @@ export const DEFAULT_PRODUCTS: Product[] = [
     rating: 4.8,
     originalLink: 'https://www.catan.com/',
     description: 'A ilha de Catan ganha vida como nunca antes! Esta bela edição especial apresenta modelos tridimensionais detalhados de cada peça pintados à mão de forma impecável.',
-    image: 'https://images.unsplash.com/photo-1610890716171-6b1bb98ffd09?auto=format&fit=crop&q=80&w=600',
+    image: 'https://c1-ebgames.eb-cdn.com.au/merchandising/images/packshots/029383a438be4af1a18f6defaae26a58_Original.jpg',
     specs: {
       'Componentes': '19 terrenos hexadecimais 3D pintados, cidades e estradas em resina detalhada',
       'Jogadores': '3 a 4 jogadores',
