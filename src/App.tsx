@@ -150,8 +150,24 @@ export default function App(): React.JSX.Element {
 
   // --- Filtering / Sorting States ---
   const [searchQuery, setSearchQuery] = useState<string>('');
-  const [selectedCategory, setSelectedCategory] = useState<string>('Todas');
+  const [selectedCategories, setSelectedCategories] = useState<string[]>(['Todas']);
   const [sortBy, setSortBy] = useState<string>('default');
+
+  const handleToggleCategory = (categoryId: string) => {
+    setShowFavoritesOnly(false);
+    if (categoryId === 'Todas') {
+      setSelectedCategories(['Todas']);
+    } else {
+      setSelectedCategories((prev) => {
+        const clean = prev.filter((id) => id !== 'Todas');
+        if (clean.includes(categoryId)) {
+          const filtered = clean.filter((id) => id !== categoryId);
+          return filtered.length === 0 ? ['Todas'] : filtered;
+        }
+        return [...clean, categoryId];
+      });
+    }
+  };
   const [showFavoritesOnly, setShowFavoritesOnly] = useState<boolean>(false);
   const [maxPriceFilter, setMaxPriceFilter] = useState<number>(6000);
 
@@ -457,8 +473,8 @@ export default function App(): React.JSX.Element {
     let result = [...products];
 
     // Category Filter
-    if (selectedCategory !== 'Todas') {
-      result = result.filter((p) => p.category === selectedCategory);
+    if (!selectedCategories.includes('Todas') && selectedCategories.length > 0) {
+      result = result.filter((p) => selectedCategories.includes(p.category));
     }
 
     // Favorites Only Filter
@@ -494,7 +510,7 @@ export default function App(): React.JSX.Element {
     }
 
     return result;
-  }, [products, selectedCategory, showFavoritesOnly, searchQuery, favorites, sortBy, maxPriceFilter]);
+  }, [products, selectedCategories, showFavoritesOnly, searchQuery, favorites, sortBy, maxPriceFilter]);
 
   return (
     <div className="min-h-screen bg-bg-main text-text-main font-sans antialiased selection:bg-[#FF3E00] selection:text-white pb-16">
@@ -518,7 +534,7 @@ export default function App(): React.JSX.Element {
         <div className="max-w-7xl mx-auto px-6 md:px-8 h-24 flex items-center justify-between gap-6">
           
           {/* Logo & Vibe */}
-          <div className="flex items-center gap-4 cursor-pointer" onClick={() => { setCurrentView('home'); setSelectedCategory('Todas'); setShowFavoritesOnly(false); }}>
+          <div className="flex items-center gap-4 cursor-pointer" onClick={() => { setCurrentView('home'); setSelectedCategories(['Todas']); setShowFavoritesOnly(false); }}>
             <div className="text-3xl md:text-4xl font-black tracking-tighter leading-none select-none">
               TECH<span className="text-[#FF3E00]">_</span>CORE
             </div>
@@ -548,7 +564,7 @@ export default function App(): React.JSX.Element {
                 onClick={() => {
                   setCurrentView('home');
                   setShowFavoritesOnly(!showFavoritesOnly);
-                  if (!showFavoritesOnly) setSelectedCategory('Todas');
+                  if (!showFavoritesOnly) setSelectedCategories(['Todas']);
                 }}
                 className={`hidden sm:flex flex-col items-end cursor-pointer ${showFavoritesOnly ? 'text-[#FF3E00]' : 'text-text-muted hover:text-text-main'}`}
               >
@@ -855,22 +871,19 @@ export default function App(): React.JSX.Element {
                 CATEGORIAS // ARRASTE PARA VER MAIS
               </span>
               <span className="text-[9px] font-mono text-text-dim">
-                {selectedCategory === 'Todas' ? 'TODOS' : selectedCategory.toUpperCase()}
+                {selectedCategories.includes('Todas') ? 'TODOS' : selectedCategories.map(c => c.toUpperCase()).join(' + ')}
               </span>
             </div>
             
             <div className="relative">
               <div className="flex gap-2 overflow-x-auto pb-2 scrollbar-none snap-x -mx-4 px-4 sm:-mx-6 sm:px-6">
                 {CATEGORIES.map((cat) => {
-                  const isActive = selectedCategory === cat.id && !showFavoritesOnly;
+                  const isActive = selectedCategories.includes(cat.id) && !showFavoritesOnly;
                   const IconComponent = cat.icon;
                   return (
                     <button
                       key={cat.id}
-                      onClick={() => {
-                        setSelectedCategory(cat.id);
-                        setShowFavoritesOnly(false);
-                      }}
+                      onClick={() => handleToggleCategory(cat.id)}
                       className={`snap-start shrink-0 px-4 py-2.5 text-xs font-black tracking-wider uppercase border-2 transition-all flex items-center gap-2 rounded-none ${
                         isActive
                           ? 'bg-[#FF3E00] border-[#FF3E00] text-white'
@@ -895,7 +908,7 @@ export default function App(): React.JSX.Element {
                 id="mobile-btn-favorites"
                 onClick={() => {
                   setShowFavoritesOnly(!showFavoritesOnly);
-                  if (!showFavoritesOnly) setSelectedCategory('Todas');
+                  if (!showFavoritesOnly) setSelectedCategories(['Todas']);
                 }}
                 className={`flex-1 sm:flex-initial py-2.5 px-4 border-2 font-black tracking-widest text-[10px] uppercase transition-all flex items-center justify-between sm:justify-center gap-2 rounded-none ${
                   showFavoritesOnly 
@@ -948,12 +961,12 @@ export default function App(): React.JSX.Element {
             </div>
 
             {/* Clear filters trigger */}
-            {(searchQuery || selectedCategory !== 'Todas' || showFavoritesOnly || sortBy !== 'default' || maxPriceFilter < 6000) && (
+            {(searchQuery || !selectedCategories.includes('Todas') || showFavoritesOnly || sortBy !== 'default' || maxPriceFilter < 6000) && (
               <button
                 id="mobile-btn-reset-filters"
                 onClick={() => {
                   setSearchQuery('');
-                  setSelectedCategory('Todas');
+                  setSelectedCategories(['Todas']);
                   setShowFavoritesOnly(false);
                   setSortBy('default');
                   setMaxPriceFilter(6000);
@@ -978,15 +991,12 @@ export default function App(): React.JSX.Element {
               <h3 className="text-[10px] font-black tracking-[0.25em] mb-4 text-[#FF3E00] uppercase">LISTA DE CATEGORIAS</h3>
               <ul className="space-y-2 max-h-[520px] overflow-y-auto pr-2 custom-scrollbar scrollbar-thin scrollbar-thumb-border-subtle scrollbar-track-transparent">
                 {CATEGORIES.map((cat) => {
-                  const isActive = selectedCategory === cat.id && !showFavoritesOnly;
+                  const isActive = selectedCategories.includes(cat.id) && !showFavoritesOnly;
                   return (
                     <li
                       id={`cat-item-${cat.id}`}
                       key={cat.id}
-                      onClick={() => {
-                        setSelectedCategory(cat.id);
-                        setShowFavoritesOnly(false);
-                      }}
+                      onClick={() => handleToggleCategory(cat.id)}
                       className={`text-sm font-black tracking-tight cursor-pointer uppercase py-1 border-b transition-all duration-150 flex items-center justify-between ${
                         isActive
                           ? 'text-[#FF3E00] border-[#FF3E00] pl-2'
@@ -1014,7 +1024,7 @@ export default function App(): React.JSX.Element {
                     id="btn-filter-favorites"
                     onClick={() => {
                       setShowFavoritesOnly(!showFavoritesOnly);
-                      if (!showFavoritesOnly) setSelectedCategory('Todas');
+                      if (!showFavoritesOnly) setSelectedCategories(['Todas']);
                     }}
                     className={`w-full text-left py-2 px-3 border-2 font-black tracking-widest text-[9px] uppercase transition-all flex items-center justify-between ${
                       showFavoritesOnly 
@@ -1071,15 +1081,15 @@ export default function App(): React.JSX.Element {
               </div>
 
               {/* Clear filters trigger */}
-              {(searchQuery || selectedCategory !== 'Todas' || showFavoritesOnly || sortBy !== 'default' || maxPriceFilter < 6000) && (
+              {(searchQuery || !selectedCategories.includes('Todas') || showFavoritesOnly || sortBy !== 'default' || maxPriceFilter < 6000) && (
                 <button
                   id="btn-reset-filters"
                   onClick={() => {
                     setSearchQuery('');
-                    setSelectedCategory('Todas');
+                    setSelectedCategories(['Todas']);
                     setShowFavoritesOnly(false);
-                  setSortBy('default');
-                  setMaxPriceFilter(6000);
+                    setSortBy('default');
+                    setMaxPriceFilter(6000);
                     triggerNotification('Todos os filtros e buscas limpos', 'info');
                   }}
                   className="w-full py-2 bg-bg-nested hover:bg-bg-card text-text-main text-[10px] font-black tracking-widest uppercase border border-border-subtle"
@@ -1094,7 +1104,7 @@ export default function App(): React.JSX.Element {
           <div className="flex-1 w-full">
             
             {/* Active search tag and counts */}
-            {(searchQuery || selectedCategory !== 'Todas' || showFavoritesOnly || sortBy !== 'default' || maxPriceFilter < 6000) && (
+            {(searchQuery || !selectedCategories.includes('Todas' ) || showFavoritesOnly || sortBy !== 'default' || maxPriceFilter < 6000) && (
               <div className="bg-bg-card border border-border-subtle p-4 mb-6 text-xs font-mono flex items-center justify-between flex-wrap gap-2">
                 <div className="flex items-center gap-2 text-text-muted">
                   <Info className="w-4 h-4 text-[#FF3E00]" />
@@ -1127,7 +1137,7 @@ export default function App(): React.JSX.Element {
                     id="btn-empty-reset"
                     onClick={() => {
                       setSearchQuery('');
-                      setSelectedCategory('Todas');
+                      setSelectedCategories(['Todas']);
                       setShowFavoritesOnly(false);
                       setSortBy('default');
                       setMaxPriceFilter(6000);
