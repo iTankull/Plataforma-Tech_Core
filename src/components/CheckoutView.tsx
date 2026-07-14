@@ -40,6 +40,34 @@ export default function CheckoutView({
 
   // Form errors
   const [formError, setFormError] = useState('');
+  const [pickupPhone, setPickupPhone] = useState('');
+  const [itemToRemove, setItemToRemove] = useState<{ id: string; action: 'update' | 'remove'; qty: number } | null>(null);
+
+  const handleUpdateQtyLocal = (productId: string, newQty: number) => {
+    if (newQty <= 0) {
+      setItemToRemove({ id: productId, action: 'update', qty: 0 });
+    } else {
+      onUpdateQuantity(productId, newQty);
+    }
+  };
+
+  const handleRemoveLocal = (productId: string) => {
+    setItemToRemove({ id: productId, action: 'remove', qty: 0 });
+  };
+
+  const confirmRemoval = () => {
+    if (!itemToRemove) return;
+    if (itemToRemove.action === 'update') {
+      onUpdateQuantity(itemToRemove.id, itemToRemove.qty);
+    } else {
+      onRemoveItem(itemToRemove.id);
+    }
+    setItemToRemove(null);
+  };
+
+  const cancelRemoval = () => {
+    setItemToRemove(null);
+  };
 
   // Successful checkout screen state
   const [checkoutSuccessData, setCheckoutSuccessData] = useState<{
@@ -87,16 +115,20 @@ export default function CheckoutView({
         return;
       }
     } else {
+      if (!pickupPhone.trim()) {
+        setFormError('POR FAVOR, INCLUA SEU TELEFONE DE CONTATO VIA WHATSAPP PARA AGENDAR A RETIRADA.');
+        return;
+      }
       // Pick-up Option: prefill address info
       finalZip = '01102-000';
       finalCity = 'SÃO PAULO';
       finalState = 'SP';
       const locDetails = pickupPoints.find(l => l.name === pickupLocation);
-      finalAddress = `RETIRADA NO LOCAL: ${pickupLocation} (${locDetails?.details || ''})`;
+      finalAddress = `RETIRADA NO LOCAL: ${pickupLocation} (${locDetails?.details || ''}) - CONTATO WHATSAPP: ${pickupPhone}`;
     }
 
     const deliveryDetails = deliveryOption === 'pickup'
-      ? `RETIRADA PÚBLICA AGENDADA EM: ${pickupLocation} (${pickupPoints.find(l => l.name === pickupLocation)?.details || ''})`
+      ? `RETIRADA PÚBLICA AGENDADA EM: ${pickupLocation} (${pickupPoints.find(l => l.name === pickupLocation)?.details || ''}) - CONTATO WHATSAPP: ${pickupPhone}`
       : `ENVIO POSTAL/MOTOBOY PARA: ${finalAddress}, CEP ${finalZip} - ${finalCity}/${finalState}`;
 
     const orderId = onCompletePurchase(totalWithDiscount, deliveryDetails);
@@ -354,6 +386,24 @@ export default function CheckoutView({
                     </p>
                   </div>
 
+                  {/* WhatsApp contact input */}
+                  <div className="space-y-1.5 p-3 bg-black border border-white/10">
+                    <label className="text-[9px] font-black tracking-widest text-[#FF3E00] uppercase block">
+                      NÚMERO DE TELEFONE (WHATSAPP) PARA CONTATO *
+                    </label>
+                    <input
+                      type="tel"
+                      required={deliveryOption === 'pickup'}
+                      value={pickupPhone}
+                      onChange={(e) => setPickupPhone(e.target.value)}
+                      placeholder="EX: (11) 99999-9999"
+                      className="w-full bg-[#111] border-2 border-white/10 p-3 text-xs text-white focus:outline-none focus:border-[#FF3E00] font-mono"
+                    />
+                    <p className="text-[8px] font-mono text-white/40 uppercase">
+                      Necessário para agendar o dia e horário da sua retirada via whatsapp.
+                    </p>
+                  </div>
+
                   <div className="grid grid-cols-1 gap-2.5">
                     {pickupPoints.map((loc) => (
                       <button
@@ -395,7 +445,7 @@ export default function CheckoutView({
               <div className="p-5 bg-white/5 border border-white/10 text-center space-y-5">
                 <div className="text-[10px] font-black tracking-widest uppercase text-[#FF3E00] flex items-center justify-center gap-1.5">
                   <Sparkles className="w-4 h-4 animate-spin" />
-                  MÉTODO DE LIQUIDAÇÃO SIMULADO ATIVO
+                  MÉTODO DE SIMULAÇÃO DE PAGAMENTO ATIVO
                 </div>
 
                 <div className="w-32 h-32 bg-white p-2 mx-auto border-2 border-[#FF3E00] flex items-center justify-center">
@@ -427,7 +477,7 @@ export default function CheckoutView({
                 </div>
 
                 <p className="text-[10px] text-white/50 font-mono leading-relaxed max-w-md mx-auto">
-                  Leia o QR-code simulado acima ou use a chave Copie e Cole. Após simular a transferência em seu app de testes, clique no botão de finalização abaixo para concluir o adquirento fictício!
+                  Leia o QR-code simulado acima ou use a chave Copie e Cole. Após simular a transferência em seu app de testes, clique no botão de finalização abaixo para concluir a compra fictícia!
                 </p>
               </div>
             </div>
@@ -437,10 +487,12 @@ export default function CheckoutView({
               <button
                 type="submit"
                 id="btn-checkout-finish"
-                className="w-full py-5 bg-[#FF3E00] hover:bg-[#ff551f] text-white font-black tracking-widest text-sm rounded-none transition-all duration-150 uppercase flex items-center justify-center gap-3 border-2 border-transparent hover:border-white"
+                className="w-full py-4 sm:py-5 px-4 bg-[#FF3E00] hover:bg-[#ff551f] text-white font-black tracking-wider sm:tracking-widest text-[11px] sm:text-xs md:text-sm rounded-none transition-all duration-150 uppercase flex items-center justify-center gap-2 sm:gap-3 border-2 border-transparent hover:border-white"
               >
-                <CreditCard className="w-5 h-5" />
-                CONCLUIR ADQUIRIMENTO SIMULADO VIA PIX (R$ {totalWithDiscount.toLocaleString('pt-BR', { minimumFractionDigits: 2 })})
+                <CreditCard className="w-4 h-4 sm:w-5 sm:h-5 shrink-0" />
+                <span className="text-center leading-normal">
+                  CONCLUIR COMPRA SIMULADA (R$ {totalWithDiscount.toLocaleString('pt-BR', { minimumFractionDigits: 2 })})
+                </span>
               </button>
               <p className="text-center text-[9px] font-mono text-white/30 mt-3 uppercase">
                 ESTA TRANSAÇÃO É FICTÍCIA E NENHUM VALOR FINANCEIRO REAL SERÁ TRANSACIONADO.
@@ -485,7 +537,7 @@ export default function CheckoutView({
                         <div className="flex items-center border border-white/15 bg-[#111]">
                           <button
                             type="button"
-                            onClick={() => onUpdateQuantity(item.product.id, item.quantity - 1)}
+                            onClick={() => handleUpdateQtyLocal(item.product.id, item.quantity - 1)}
                             className="px-2 py-0.5 hover:bg-white/5 text-xs text-white"
                           >
                             -
@@ -493,7 +545,7 @@ export default function CheckoutView({
                           <span className="px-2 font-mono text-xs text-white font-bold">{item.quantity}</span>
                           <button
                             type="button"
-                            onClick={() => onUpdateQuantity(item.product.id, item.quantity + 1)}
+                            onClick={() => handleUpdateQtyLocal(item.product.id, item.quantity + 1)}
                             className="px-2 py-0.5 hover:bg-white/5 text-xs text-white"
                           >
                             +
@@ -502,7 +554,7 @@ export default function CheckoutView({
 
                         <button
                           type="button"
-                          onClick={() => onRemoveItem(item.product.id)}
+                          onClick={() => handleRemoveLocal(item.product.id)}
                           className="text-white/40 hover:text-[#FF3E00] transition-colors p-1"
                           title="Remover Item"
                         >
@@ -516,21 +568,21 @@ export default function CheckoutView({
 
               {/* Calculated Totals details */}
               <div className="bg-white/5 border border-white/10 p-4 space-y-3 font-mono text-xs">
-                <div className="flex justify-between border-b border-white/5 pb-1.5">
-                  <span className="text-white/40">VALOR DE REFERÊNCIA ORIGINAL:</span>
-                  <span className="text-white">
+                <div className="flex justify-between items-center border-b border-white/5 pb-1.5 gap-2">
+                  <span className="text-white/40 whitespace-nowrap">VALOR ORIGINAL:</span>
+                  <span className="text-white whitespace-nowrap text-right">
                     R$ {subtotal.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
                   </span>
                 </div>
-                <div className="flex justify-between border-b border-white/5 pb-1.5">
-                  <span className="text-white/40">DESCONTO PADRÃO (45%):</span>
-                  <span className="text-[#FF3E00] font-black">
+                <div className="flex justify-between items-center border-b border-white/5 pb-1.5 gap-2">
+                  <span className="text-white/40 whitespace-nowrap">DESCONTO PADRÃO (45%):</span>
+                  <span className="text-[#FF3E00] font-black whitespace-nowrap text-right">
                     - R$ {discountAmount.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
                   </span>
                 </div>
-                <div className="flex justify-between pt-1.5 text-sm">
-                  <span className="text-[#FF3E00] font-black uppercase">VALOR TOTAL FINAL:</span>
-                  <span className="font-black text-white">
+                <div className="flex justify-between items-center pt-1.5 text-sm gap-2">
+                  <span className="text-[#FF3E00] font-black uppercase whitespace-nowrap">VALOR TOTAL FINAL:</span>
+                  <span className="font-black text-white whitespace-nowrap text-right">
                     R$ {totalWithDiscount.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
                   </span>
                 </div>
@@ -540,6 +592,55 @@ export default function CheckoutView({
 
         </div>
       )}
+
+      {/* Confirmation Modal overlay */}
+      <AnimatePresence>
+        {itemToRemove && (
+          <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 0.8 }}
+              exit={{ opacity: 0 }}
+              onClick={cancelRemoval}
+              className="fixed inset-0 bg-black/95 backdrop-blur-xs"
+            />
+            <motion.div
+              initial={{ opacity: 0, scale: 0.95, y: 15 }}
+              animate={{ opacity: 1, scale: 1, y: 0 }}
+              exit={{ opacity: 0, scale: 0.95, y: 15 }}
+              className="relative bg-black w-full max-w-sm rounded-none border-4 border-white p-6 md:p-8 z-50 text-white text-center"
+            >
+              <div className="w-16 h-16 bg-[#FF3E00] flex items-center justify-center mx-auto mb-4 border-2 border-white">
+                <Trash2 className="w-8 h-8 text-white" />
+              </div>
+              <h3 className="text-xl font-black uppercase tracking-tight mb-2">
+                REMOVER ITEM
+              </h3>
+              <p className="text-xs text-white/70 font-mono mb-6 leading-relaxed uppercase">
+                {cart.length === 1 && cart.some(item => item.product.id === itemToRemove.id)
+                  ? 'Você deseja esvaziar seu carrinho?'
+                  : 'Você deseja remover este item do seu carrinho?'}
+              </p>
+              <div className="grid grid-cols-2 gap-3">
+                <button
+                  type="button"
+                  onClick={cancelRemoval}
+                  className="py-2.5 bg-zinc-800 hover:bg-zinc-700 text-white font-black tracking-wider text-[10px] uppercase border border-white/20 transition-all duration-150"
+                >
+                  Cancelar
+                </button>
+                <button
+                  type="button"
+                  onClick={confirmRemoval}
+                  className="py-2.5 bg-[#FF3E00] hover:bg-[#ff551f] text-white font-black tracking-wider text-[10px] uppercase border border-transparent hover:border-white transition-all duration-150"
+                >
+                  Confirmar
+                </button>
+              </div>
+            </motion.div>
+          </div>
+        )}
+      </AnimatePresence>
     </div>
   );
 }
