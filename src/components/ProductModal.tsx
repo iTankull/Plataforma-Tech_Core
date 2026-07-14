@@ -618,7 +618,7 @@ export default function ProductModal({
 
               {/* Part 2: Comentários & Críticas */}
               <div>
-                <h3 className="font-sans font-black text-text-main text-base md:text-lg uppercase tracking-tighter mb-4 flex items-center gap-2">
+                <h3 className="font-sans font-black text-text-main text-base md:text-lg uppercase tracking-tighter mb-4 hidden md:flex items-center gap-2">
                   <MessageSquare className="w-4 h-4 text-[#FF3E00]" />
                   Comentários & Críticas ({productReviews.length})
                 </h3>

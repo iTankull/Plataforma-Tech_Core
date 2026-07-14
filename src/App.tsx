@@ -727,12 +727,58 @@ export default function App(): React.JSX.Element {
 
       {/* Primary Navigation Header in Bold Typography Style */}
       <nav className="sticky top-0 bg-bg-card/95 backdrop-blur-md border-b border-border-subtle z-40">
-        <div className="max-w-7xl mx-auto px-6 md:px-8 h-24 flex items-center justify-between gap-6">
+        <div className="max-w-7xl mx-auto px-3 sm:px-6 md:px-8 py-3.5 md:py-0 md:h-24 flex flex-col md:flex-row md:items-center justify-between gap-3 md:gap-6">
           
-          {/* Logo & Vibe */}
-          <div className="flex items-center gap-4 cursor-pointer" onClick={() => { setCurrentView('home'); setSelectedCategories(['Todas']); setShowFavoritesOnly(false); }}>
-            <div className="text-3xl md:text-4xl font-black tracking-tighter leading-none select-none">
-              TECH<span className="text-[#FF3E00]">_</span>CORE
+          {/* Row 1: Logo & Controls (Controls on mobile, logo always) */}
+          <div className="flex items-center justify-between w-full md:w-auto gap-4">
+            {/* Logo & Vibe */}
+            <div className="flex items-center gap-2 sm:gap-4 cursor-pointer shrink-0" onClick={() => { setCurrentView('home'); setSelectedCategories(['Todas']); setShowFavoritesOnly(false); }}>
+              <div className="text-xl sm:text-2xl md:text-4xl font-black tracking-tighter leading-none select-none">
+                TECH<span className="text-[#FF3E00]">_</span>CORE
+              </div>
+            </div>
+
+            {/* Mobile Controls: Theme, Profile, Logout (stay on the same line as the logo) */}
+            <div className="flex md:hidden items-center gap-1.5 sm:gap-2">
+              {/* Theme Switcher */}
+              <button
+                onClick={() => {
+                  setTheme((prev) => (prev === 'light' ? 'dark' : 'light'));
+                  triggerNotification(`Modo ${theme === 'light' ? 'Escuro' : 'Claro'} ativado!`, 'info');
+                }}
+                className="p-2 bg-bg-input border border-border-subtle text-text-muted hover:text-[#FF3E00] hover:border-[#FF3E00] transition-all duration-150"
+                title={theme === 'light' ? 'Ativar Modo Escuro' : 'Ativar Modo Claro'}
+              >
+                {theme === 'light' ? <Moon className="w-3.5 h-3.5" /> : <Sun className="w-3.5 h-3.5" />}
+              </button>
+
+              {/* Profile / Login */}
+              {currentUser ? (
+                <div className="flex items-center gap-1.5">
+                  <div
+                    onClick={() => setIsProfileOpen(true)}
+                    className="w-8 h-8 bg-text-main hover:bg-[#FF3E00] flex items-center justify-center text-bg-main hover:text-white font-black text-xs select-none border-2 border-text-main hover:border-[#FF3E00] cursor-pointer transition-all duration-150 shrink-0"
+                    title="Ver meu perfil e histórico de compras"
+                  >
+                    {currentUser.name.slice(0, 2).toUpperCase()}
+                  </div>
+
+                  <button
+                    onClick={handleLogout}
+                    className="p-2 bg-bg-input border border-border-subtle text-text-muted hover:text-[#FF3E00] hover:border-[#FF3E00] transition-all duration-150"
+                    title="Fazer Logout"
+                  >
+                    <LogOut className="w-3.5 h-3.5" />
+                  </button>
+                </div>
+              ) : (
+                <button
+                  onClick={() => setShowAuthModal(true)}
+                  className="px-2.5 py-2 bg-text-main text-bg-main hover:bg-[#FF3E00] hover:text-white text-[10px] font-black tracking-wider uppercase rounded-none transition-all duration-150"
+                >
+                  LOGIN
+                </button>
+              )}
             </div>
           </div>
 
@@ -750,202 +796,209 @@ export default function App(): React.JSX.Element {
             <div className="absolute right-4 text-[9px] font-mono text-text-dim">[ SEARCH_ON ]</div>
           </div>
 
-          {/* Favorites counter, Cart and Account options */}
-          <div className="flex items-center gap-6">
-            
-            {/* Saved Count */}
-            {currentUser && (
-              <button
-                id="header-saved-btn"
-                onClick={() => {
-                  setCurrentView('home');
-                  setShowFavoritesOnly(!showFavoritesOnly);
-                  if (!showFavoritesOnly) setSelectedCategories(['Todas']);
-                }}
-                className={`hidden sm:flex flex-col items-end cursor-pointer ${showFavoritesOnly ? 'text-[#FF3E00]' : 'text-text-muted hover:text-text-main'}`}
-              >
-                <span className="text-[9px] font-black tracking-widest uppercase">FAVORITOS</span>
-                <span className="text-lg font-black tracking-tighter flex items-center gap-1">
-                  {favorites.length}
-                  <Heart className={`w-3.5 h-3.5 ${showFavoritesOnly ? 'fill-[#FF3E00]' : ''}`} />
-                </span>
-              </button>
-            )}
-
-            {/* Cart Count */}
-            <button
-              id="header-cart-btn"
-              onClick={() => setIsCartOpen(true)}
-              className="flex flex-col items-end cursor-pointer text-text-muted hover:text-text-main relative"
-            >
-              <span className="text-[9px] font-black tracking-widest uppercase">CARRINHO</span>
-              <span className="text-lg font-black tracking-tighter flex items-center gap-1">
-                {cart.reduce((sum, item) => sum + item.quantity, 0)}
-                <ShoppingCart className="w-3.5 h-3.5 text-[#FF3E00]" />
-              </span>
-            </button>
-
-            {/* Notification Bell */}
-            <div className="relative">
-              <button
-                id="header-notif-btn"
-                onClick={() => setIsNotificationOpen(!isNotificationOpen)}
-                className="flex flex-col items-end cursor-pointer text-text-muted hover:text-text-main relative"
-                title="Notificações Internas"
-              >
-                <span className="text-[9px] font-black tracking-widest uppercase">NOTIFICAÇÕES</span>
-                <span className="text-lg font-black tracking-tighter flex items-center gap-1">
-                  {inAppNotifications.filter(n => !n.read).length}
-                  <Bell className={`w-3.5 h-3.5 ${inAppNotifications.some(n => !n.read) ? 'text-[#FF3E00] animate-bounce' : 'text-text-dim'}`} />
-                </span>
-              </button>
+          {/* Row 2 on mobile: Favorites, Cart and Notification options (Full width grids) / Flex layout on desktop */}
+          <div className="flex items-center gap-3 sm:gap-4 md:gap-6 shrink-0 w-full md:w-auto">
+            <div className={`w-full md:w-auto grid ${currentUser ? 'grid-cols-3' : 'grid-cols-2'} md:flex md:items-center gap-1.5 sm:gap-2.5 md:gap-6 border-t md:border-t-0 border-border-very-subtle/40 pt-2.5 md:pt-0`}>
               
-              {/* Notification Popover Dropdown */}
-              <AnimatePresence>
-                {isNotificationOpen && (
-                  <motion.div
-                    initial={{ opacity: 0, y: 15 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    exit={{ opacity: 0, y: 15 }}
-                    className="absolute right-0 mt-3 w-80 bg-bg-card border-2 border-border-main shadow-2xl p-4 z-50 font-mono text-xs text-text-main"
-                  >
-                    <div className="flex items-center justify-between border-b border-border-very-subtle pb-2 mb-3 gap-2">
-                      <span className="font-black text-[10px] tracking-widest uppercase text-[#FF3E00] whitespace-nowrap">
-                        CENTRAL DE AVISOS
-                      </span>
-                      {inAppNotifications.length > 0 && (
-                        <div className="flex items-center gap-2 shrink-0 select-none">
-                          <button
-                            onClick={() => {
-                              setInAppNotifications(prev => prev.map(n => ({ ...n, read: true })));
-                              triggerNotification('Todas as notificações marcadas como lidas', 'info');
-                            }}
-                            className="text-[8px] font-black tracking-wider text-text-dim hover:text-[#FF3E00] uppercase cursor-pointer whitespace-nowrap"
-                            title="Marcar todas as notificações como lidas"
-                          >
-                            [ MARCAR LIDOS ]
-                          </button>
-                          <span className="text-text-dim/50 text-[8px]">|</span>
-                          <button
-                            onClick={handleClearAllNotifications}
-                            className="p-1 text-text-dim hover:text-[#FF3E00] transition-colors cursor-pointer flex items-center justify-center rounded hover:bg-bg-nested"
-                            title="Apagar permanentemente todas as notificações"
-                          >
-                            <Trash2 className="w-3.5 h-3.5" />
-                          </button>
-                        </div>
-                      )}
-                    </div>
-                    
-                    <div className="space-y-3 max-h-64 overflow-y-auto pr-1 scrollbar-thin">
-                      {inAppNotifications.length === 0 ? (
-                        <div className="text-center py-6 text-text-dim text-[10px] uppercase font-bold">
-                          Nenhuma notificação por enquanto.
-                        </div>
-                      ) : (
-                        inAppNotifications.map((notif) => (
-                          <div
-                            key={notif.id}
-                            onClick={() => {
-                              const foundProd = products.find(p => p.id === notif.productId);
-                              if (foundProd) {
-                                setSelectedProduct(foundProd);
-                              }
-                              setInAppNotifications(prev => prev.map(n => n.id === notif.id ? { ...n, read: true } : n));
-                              setIsNotificationOpen(false);
-                            }}
-                            className={`p-2.5 border transition-all duration-150 cursor-pointer flex gap-3 items-center relative group ${
-                              notif.read ? 'bg-bg-nested border-border-very-subtle/50 text-text-muted' : 'bg-bg-nested border-[#FF3E00]/30 text-text-main hover:border-[#FF3E00]'
-                            }`}
-                          >
-                            <img
-                              src={notif.productImage}
-                              alt={notif.productName}
-                              className="w-8 h-8 object-cover border border-border-subtle bg-bg-card shrink-0"
-                            />
-                            <div className="min-w-0 flex-grow pr-5">
-                              <p className="text-[9px] leading-tight font-black uppercase text-text-main truncate">
-                                {notif.productName}
-                              </p>
-                              <p className="text-[8px] leading-relaxed text-text-dim uppercase mt-0.5 font-sans">
-                                {notif.message}
-                              </p>
-                              <span className="text-[7px] text-[#FF3E00] font-bold block mt-1">
-                                RECEBIDO ÀS {notif.date}
-                              </span>
-                            </div>
+              {/* Saved Count */}
+              {currentUser && (
+                <button
+                  id="header-saved-btn"
+                  onClick={() => {
+                    setCurrentView('home');
+                    setShowFavoritesOnly(!showFavoritesOnly);
+                    if (!showFavoritesOnly) setSelectedCategories(['Todas']);
+                  }}
+                  className={`flex flex-col md:items-end items-center justify-center py-2 px-1 bg-bg-input md:bg-transparent border md:border-0 border-border-subtle/30 cursor-pointer ${showFavoritesOnly ? 'text-[#FF3E00] border-[#FF3E00]/30 bg-[#FF3E00]/5' : 'text-text-muted hover:text-text-main'}`}
+                >
+                  <span className="text-[8px] md:text-[9px] font-black tracking-widest uppercase">FAVORITOS</span>
+                  <span className="text-xs sm:text-sm md:text-lg font-black tracking-tighter flex items-center gap-1">
+                    {favorites.length}
+                    <Heart className={`w-3.5 h-3.5 ${showFavoritesOnly ? 'fill-[#FF3E00]' : ''}`} />
+                  </span>
+                </button>
+              )}
 
-                            {/* Individual Delete/Dismiss Button */}
+              {/* Cart Count */}
+              <button
+                id="header-cart-btn"
+                onClick={() => setIsCartOpen(true)}
+                className="flex flex-col md:items-end items-center justify-center py-2 px-1 bg-bg-input md:bg-transparent border md:border-0 border-border-subtle/30 cursor-pointer text-text-muted hover:text-text-main"
+              >
+                <span className="text-[8px] md:text-[9px] font-black tracking-widest uppercase">CARRINHO</span>
+                <span className="text-xs sm:text-sm md:text-lg font-black tracking-tighter flex items-center gap-1">
+                  {cart.reduce((sum, item) => sum + item.quantity, 0)}
+                  <ShoppingCart className="w-3.5 h-3.5 text-[#FF3E00]" />
+                </span>
+              </button>
+
+              {/* Notification Bell */}
+              <div className="relative">
+                <button
+                  id="header-notif-btn"
+                  onClick={() => setIsNotificationOpen(!isNotificationOpen)}
+                  className="w-full flex flex-col md:items-end items-center justify-center py-2 px-1 bg-bg-input md:bg-transparent border md:border-0 border-border-subtle/30 cursor-pointer text-text-muted hover:text-text-main"
+                  title="Notificações Internas"
+                >
+                  <span className="text-[8px] md:text-[9px] font-black tracking-widest uppercase">AVISOS</span>
+                  <span className="text-xs sm:text-sm md:text-lg font-black tracking-tighter flex items-center gap-1">
+                    {inAppNotifications.filter(n => !n.read).length}
+                    <Bell className={`w-3.5 h-3.5 ${inAppNotifications.some(n => !n.read) ? 'text-[#FF3E00] animate-bounce' : 'text-text-dim'}`} />
+                  </span>
+                </button>
+                
+                {/* Notification Popover Dropdown */}
+                <AnimatePresence>
+                  {isNotificationOpen && (
+                    <motion.div
+                      initial={{ opacity: 0, y: 15 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      exit={{ opacity: 0, y: 15 }}
+                      className="absolute -right-3 sm:right-0 mt-3 w-[290px] sm:w-80 bg-bg-card border-2 border-border-main shadow-2xl p-4 z-50 font-mono text-xs text-text-main"
+                    >
+                      <div className="flex items-center justify-between border-b border-border-very-subtle pb-2 mb-3 gap-2">
+                        <span className="font-black text-[10px] tracking-widest uppercase text-[#FF3E00] whitespace-nowrap">
+                          CENTRAL DE AVISOS
+                        </span>
+                        {inAppNotifications.length > 0 && (
+                          <div className="flex items-center gap-2 shrink-0 select-none">
                             <button
-                              onClick={(e) => handleDeleteNotification(notif.id, e)}
-                              className="absolute right-2 top-2.5 p-1 text-text-dim hover:text-[#FF3E00] transition-colors rounded cursor-pointer opacity-0 group-hover:opacity-100 focus:opacity-100"
-                              title="Apagar esta notificação"
+                              onClick={() => {
+                                setInAppNotifications(prev => prev.map(n => ({ ...n, read: true })));
+                                triggerNotification('Todas as notificações marcadas como lidas', 'info');
+                              }}
+                              className="text-[8px] font-black tracking-wider text-text-dim hover:text-[#FF3E00] uppercase cursor-pointer whitespace-nowrap"
+                              title="Marcar todas as notificações como lidas"
                             >
-                              <Trash2 className="w-3 h-3" />
+                              [ MARCAR LIDOS ]
+                            </button>
+                            <span className="text-text-dim/50 text-[8px]">|</span>
+                            <button
+                              onClick={handleClearAllNotifications}
+                              className="p-1 text-text-dim hover:text-[#FF3E00] transition-colors cursor-pointer flex items-center justify-center rounded hover:bg-bg-nested"
+                              title="Apagar permanentemente todas as notificações"
+                            >
+                              <Trash2 className="w-3.5 h-3.5" />
                             </button>
                           </div>
-                        ))
-                      )}
-                    </div>
-                  </motion.div>
-                )}
-              </AnimatePresence>
+                        )}
+                      </div>
+                      
+                      <div className="space-y-3 max-h-64 overflow-y-auto pr-1 scrollbar-thin">
+                        {inAppNotifications.length === 0 ? (
+                          <div className="text-center py-6 text-text-dim text-[10px] uppercase font-bold">
+                            Nenhuma notificação por enquanto.
+                          </div>
+                        ) : (
+                          inAppNotifications.map((notif) => (
+                            <div
+                              key={notif.id}
+                              onClick={() => {
+                                const foundProd = products.find(p => p.id === notif.productId);
+                                if (foundProd) {
+                                  setSelectedProduct(foundProd);
+                                }
+                                setInAppNotifications(prev => prev.map(n => n.id === notif.id ? { ...n, read: true } : n));
+                                setIsNotificationOpen(false);
+                              }}
+                              className={`p-2.5 border transition-all duration-150 cursor-pointer flex gap-3 items-center relative group ${
+                                notif.read ? 'bg-bg-nested border-border-very-subtle/50 text-text-muted' : 'bg-bg-nested border-[#FF3E00]/30 text-text-main hover:border-[#FF3E00]'
+                              }`}
+                            >
+                              <img
+                                src={notif.productImage}
+                                alt={notif.productName}
+                                className="w-8 h-8 object-cover border border-border-subtle bg-bg-card shrink-0"
+                              />
+                              <div className="min-w-0 flex-grow pr-5">
+                                <p className="text-[9px] leading-tight font-black uppercase text-text-main truncate">
+                                  {notif.productName}
+                                </p>
+                                <p className="text-[8px] leading-relaxed text-text-dim uppercase mt-0.5 font-sans">
+                                  {notif.message}
+                                </p>
+                                <span className="text-[7px] text-[#FF3E00] font-bold block mt-1">
+                                  RECEBIDO ÀS {notif.date}
+                                </span>
+                              </div>
+
+                              {/* Individual Delete/Dismiss Button */}
+                              <button
+                                onClick={(e) => handleDeleteNotification(notif.id, e)}
+                                className="absolute right-2 top-2.5 p-1 text-text-dim hover:text-[#FF3E00] transition-colors rounded cursor-pointer opacity-0 group-hover:opacity-100 focus:opacity-100"
+                                title="Apagar esta notificação"
+                              >
+                                <Trash2 className="w-3 h-3" />
+                              </button>
+                            </div>
+                          ))
+                        )}
+                      </div>
+                    </motion.div>
+                  )}
+                </AnimatePresence>
+              </div>
+
             </div>
 
-            {/* Theme Switcher Button */}
-            <button
-              id="header-theme-toggle-btn"
-              onClick={() => {
-                setTheme((prev) => (prev === 'light' ? 'dark' : 'light'));
-                triggerNotification(`Modo ${theme === 'light' ? 'Escuro' : 'Claro'} ativado!`, 'info');
-              }}
-              className="p-3 bg-bg-input border border-border-subtle text-text-muted hover:text-[#FF3E00] hover:border-[#FF3E00] transition-all duration-200"
-              title={theme === 'light' ? 'Ativar Modo Escuro' : 'Ativar Modo Claro'}
-            >
-              {theme === 'light' ? <Moon className="w-4 h-4" /> : <Sun className="w-4 h-4" />}
-            </button>
+            {/* Desktop-only Controls (Theme, Profile, Logout) */}
+            <div className="hidden md:flex items-center gap-3">
+              {/* Theme Switcher Button */}
+              <button
+                id="header-theme-toggle-btn"
+                onClick={() => {
+                  setTheme((prev) => (prev === 'light' ? 'dark' : 'light'));
+                  triggerNotification(`Modo ${theme === 'light' ? 'Escuro' : 'Claro'} ativado!`, 'info');
+                }}
+                className="p-2 md:p-3 bg-bg-input border border-border-subtle text-text-muted hover:text-[#FF3E00] hover:border-[#FF3E00] transition-all duration-200"
+                title={theme === 'light' ? 'Ativar Modo Escuro' : 'Ativar Modo Claro'}
+              >
+                {theme === 'light' ? <Moon className="w-3.5 h-3.5 md:w-4 md:h-4" /> : <Sun className="w-3.5 h-3.5 md:w-4 md:h-4" />}
+              </button>
 
-            {/* Profile / Login */}
-            {currentUser ? (
-              <div className="flex items-center gap-3">
-                <div className="flex flex-col items-end hidden sm:flex text-right">
-                  <span className="text-[10px] font-black tracking-widest text-text-dim uppercase">SALDO SIMULADO</span>
-                  <button
-                    id="header-btn-add-funds"
-                    onClick={handleAddFunds}
-                    className="text-xs font-black text-[#FF3E00] hover:text-text-main font-mono transition-colors duration-150"
-                    title="Adicionar +R$ 5.000 fictícios"
+              {/* Profile / Login */}
+              {currentUser ? (
+                <div className="flex items-center gap-1.5 sm:gap-3">
+                  <div className="flex flex-col items-end hidden sm:flex text-right">
+                    <span className="text-[10px] font-black tracking-widest text-text-dim uppercase">SALDO SIMULADO</span>
+                    <button
+                      id="header-btn-add-funds"
+                      onClick={handleAddFunds}
+                      className="text-xs font-black text-[#FF3E00] hover:text-text-main font-mono transition-colors duration-150"
+                      title="Adicionar +R$ 5.000 fictícios"
+                    >
+                      R$ {currentUser.balance.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
+                    </button>
+                  </div>
+
+                  <div
+                    onClick={() => setIsProfileOpen(true)}
+                    className="w-8 h-8 sm:w-12 sm:h-12 bg-text-main hover:bg-[#FF3E00] flex items-center justify-center text-bg-main hover:text-white font-black text-xs sm:text-sm select-none border-2 border-text-main hover:border-[#FF3E00] cursor-pointer transition-all duration-150 shrink-0"
+                    title="Ver meu perfil e histórico de compras"
                   >
-                    R$ {currentUser.balance.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
+                    {currentUser.name.slice(0, 2).toUpperCase()}
+                  </div>
+
+                  <button
+                    id="header-btn-logout"
+                    onClick={handleLogout}
+                    className="p-2 sm:p-3 bg-bg-input border border-border-subtle text-text-muted hover:text-[#FF3E00] hover:border-[#FF3E00] transition-all duration-200"
+                    title="Fazer Logout"
+                  >
+                    <LogOut className="w-3.5 h-3.5 md:w-4 md:h-4" />
                   </button>
                 </div>
-
-                <div
-                  onClick={() => setIsProfileOpen(true)}
-                  className="w-12 h-12 bg-text-main hover:bg-[#FF3E00] flex items-center justify-center text-bg-main hover:text-white font-black text-sm select-none border-2 border-text-main hover:border-[#FF3E00] cursor-pointer transition-all duration-150"
-                  title="Ver meu perfil e histórico de compras"
-                >
-                  {currentUser.name.slice(0, 2).toUpperCase()}
-                </div>
-
+              ) : (
                 <button
-                  id="header-btn-logout"
-                  onClick={handleLogout}
-                  className="p-3 bg-bg-input border border-border-subtle text-text-muted hover:text-[#FF3E00] hover:border-[#FF3E00] transition-all duration-200"
-                  title="Fazer Logout"
+                  id="header-btn-login"
+                  onClick={() => setShowAuthModal(true)}
+                  className="px-3 py-2 sm:px-5 sm:py-3.5 bg-text-main text-bg-main hover:bg-[#FF3E00] hover:text-white text-[10px] sm:text-xs font-black tracking-wider sm:tracking-widest uppercase rounded-none transition-all duration-200"
                 >
-                  <LogOut className="w-4 h-4" />
+                  LOGIN
                 </button>
-              </div>
-            ) : (
-              <button
-                id="header-btn-login"
-                onClick={() => setShowAuthModal(true)}
-                className="px-5 py-3.5 bg-text-main text-bg-main hover:bg-[#FF3E00] hover:text-white text-xs font-black tracking-widest uppercase rounded-none transition-all duration-200"
-              >
-                CRIAR PERFIL
-              </button>
-            )}
+              )}
+            </div>
+
           </div>
         </div>
       </nav>
