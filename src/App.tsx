@@ -890,9 +890,9 @@ export default function App(): React.JSX.Element {
                             Nenhuma notificação por enquanto.
                           </div>
                         ) : (
-                          inAppNotifications.map((notif) => (
+                          inAppNotifications.map((notif, index) => (
                             <div
-                              key={notif.id}
+                              key={`${notif.id}-${index}`}
                               onClick={() => {
                                 const foundProd = products.find(p => p.id === notif.productId);
                                 if (foundProd) {

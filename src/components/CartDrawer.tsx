@@ -73,8 +73,8 @@ export default function CartDrawer({
                   </p>
                 </div>
               ) : (
-                cart.map((item) => (
-                  <div key={item.product.id} className="flex gap-4 border-b border-border-very-subtle pb-4 last:border-0">
+                cart.map((item, index) => (
+                  <div key={`${item.product.id}-${index}`} className="flex gap-4 border-b border-border-very-subtle pb-4 last:border-0">
                     <img
                       src={item.product.image}
                       alt={item.product.name}

@@ -510,8 +510,8 @@ export default function CheckoutView({
 
               {/* Items List inside Checkout wrapper */}
               <div className="space-y-4 max-h-[350px] overflow-y-auto pr-2 custom-scrollbar">
-                {cart.map((item) => (
-                  <div key={item.product.id} className="flex gap-4 border-b border-white/5 pb-4 last:border-0 last:pb-0">
+                {cart.map((item, index) => (
+                  <div key={`${item.product.id}-${index}`} className="flex gap-4 border-b border-white/5 pb-4 last:border-0 last:pb-0">
                     <img
                       src={item.product.image}
                       alt={item.product.name}

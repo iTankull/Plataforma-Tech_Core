@@ -110,7 +110,7 @@ export default function ProductModal({
   onAddToCart,
   onRegisterStockAlert,
 }: ProductModalProps): React.JSX.Element {
-  const [newRating, setNewRating] = useState<number>(5);
+  const [newRating, setNewRating] = useState<number>(0);
   const [newComment, setNewComment] = useState<string>('');
   const [hoveredRating, setHoveredRating] = useState<number | null>(null);
   const [isCheckoutSuccess, setIsCheckoutSuccess] = useState<boolean>(false);
@@ -178,18 +178,14 @@ export default function ProductModal({
       setFormError('Você precisa estar conectado à sua conta para avaliar.');
       return;
     }
-    if (!newComment.trim()) {
-      setFormError('Escreva um comentário sobre sua experiência.');
-      return;
-    }
-    if (newComment.length < 5) {
-      setFormError('A sua avaliação deve ter pelo menos 5 caracteres.');
+    if (newRating === 0) {
+      setFormError('Por favor, selecione a quantidade de estrelas (de 1 a 5).');
       return;
     }
 
-    onAddReview(newRating, newComment);
+    onAddReview(newRating, newComment.trim());
     setNewComment('');
-    setNewRating(5);
+    setNewRating(0);
     setFormError('');
     setIsCheckoutSuccess(false);
   };
@@ -484,7 +480,7 @@ export default function ProductModal({
                             maxLength={300}
                           />
                           <div className="flex justify-between text-[8px] font-mono text-text-dim">
-                            <span>Min. 5 caracteres</span>
+                            <span>Comentário Opcional</span>
                             <span>{newComment.length}/300</span>
                           </div>
                         </div>
@@ -510,7 +506,7 @@ export default function ProductModal({
                             onClick={() => {
                               setIsCheckoutSuccess(false);
                               setNewComment('');
-                              setNewRating(5);
+                              setNewRating(0);
                               setFormError('');
                             }}
                             className="px-3 py-2 border border-border-subtle hover:border-text-main text-text-muted hover:text-text-main font-black tracking-widest text-[10px] rounded-none font-mono"
@@ -664,9 +660,9 @@ export default function ProductModal({
                       Nenhuma crítica registrada para este item de tecnologia.
                     </div>
                   ) : (
-                    productReviews.map((review) => (
+                    productReviews.map((review, index) => (
                       <div
-                        key={review.id}
+                        key={`${review.id}-${index}`}
                         className="bg-bg-card rounded-none p-4 border border-border-very-subtle flex flex-col"
                       >
                         <div className="flex items-center justify-between mb-2">
