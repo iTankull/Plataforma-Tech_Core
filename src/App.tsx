@@ -172,6 +172,7 @@ export default function App(): React.JSX.Element {
   };
   const [showFavoritesOnly, setShowFavoritesOnly] = useState<boolean>(false);
   const [maxPriceFilter, setMaxPriceFilter] = useState<number>(6000);
+  const [minRatingFilter, setMinRatingFilter] = useState<number>(0);
 
   // --- UI Interactivity States ---
   const [selectedProduct, setSelectedProduct] = useState<Product | null>(null);
@@ -770,6 +771,11 @@ export default function App(): React.JSX.Element {
       result = result.filter((p) => (p.price * 0.55) <= maxPriceFilter);
     }
 
+    // Rating Filter
+    if (minRatingFilter > 0) {
+      result = result.filter((p) => p.rating >= minRatingFilter);
+    }
+
     // Sort Logic
     if (sortBy === 'price-asc') {
       result.sort((a, b) => a.price - b.price);
@@ -780,7 +786,7 @@ export default function App(): React.JSX.Element {
     }
 
     return result;
-  }, [products, selectedCategories, showFavoritesOnly, searchQuery, favorites, sortBy, maxPriceFilter]);
+  }, [products, selectedCategories, showFavoritesOnly, searchQuery, favorites, sortBy, maxPriceFilter, minRatingFilter]);
 
   return (
     <div className="min-h-screen bg-bg-main text-text-main font-sans antialiased selection:bg-[#FF3E00] selection:text-white pb-16">
@@ -1394,8 +1400,24 @@ export default function App(): React.JSX.Element {
               <ChevronDown className="w-4 h-4 text-[#FF3E00] absolute right-3 top-1/2 -translate-y-1/2 pointer-events-none" />
             </div>
 
+            {/* Mobile Rating Filter */}
+            <div className="relative flex-1">
+              <select
+                id="mobile-select-rating"
+                value={minRatingFilter}
+                onChange={(e) => setMinRatingFilter(Number(e.target.value))}
+                className="w-full bg-bg-input border-2 border-border-very-subtle text-text-main font-black tracking-widest text-[10px] px-3.5 py-2.5 outline-none rounded-none cursor-pointer appearance-none uppercase pr-8"
+              >
+                <option value={0}>QUALQUER NOTA</option>
+                <option value={3}>3+ ESTRELAS</option>
+                <option value={4}>4+ ESTRELAS</option>
+                <option value={4.5}>4.5+ ESTRELAS</option>
+              </select>
+              <ChevronDown className="w-4 h-4 text-[#FF3E00] absolute right-3 top-1/2 -translate-y-1/2 pointer-events-none" />
+            </div>
+
             {/* Clear filters trigger */}
-            {(searchQuery || !selectedCategories.includes('Todas') || showFavoritesOnly || sortBy !== 'default' || maxPriceFilter < 6000) && (
+            {(searchQuery || !selectedCategories.includes('Todas') || showFavoritesOnly || sortBy !== 'default' || maxPriceFilter < 6000 || minRatingFilter > 0) && (
               <button
                 id="mobile-btn-reset-filters"
                 onClick={() => {
@@ -1404,6 +1426,7 @@ export default function App(): React.JSX.Element {
                   setShowFavoritesOnly(false);
                   setSortBy('default');
                   setMaxPriceFilter(6000);
+                  setMinRatingFilter(0);
                   triggerNotification('Todos os filtros e buscas limpos', 'info');
                 }}
                 className="py-2.5 px-4 bg-[#FF3E00]/10 hover:bg-[#FF3E00] text-[#FF3E00] hover:text-white text-[10px] font-black tracking-widest uppercase border-2 border-[#FF3E00]/20 hover:border-[#FF3E00] transition-all rounded-none"
@@ -1594,8 +1617,27 @@ export default function App(): React.JSX.Element {
                 </div>
               </div>
 
+              {/* Rating Filter (Desktop) */}
+              <div className="pt-2">
+                <label className="text-[9px] font-black tracking-widest text-text-dim uppercase block mb-2">AVALIAÇÃO MÍNIMA</label>
+                <div className="relative">
+                  <select
+                    id="select-rating"
+                    value={minRatingFilter}
+                    onChange={(e) => setMinRatingFilter(Number(e.target.value))}
+                    className="w-full bg-bg-input border-2 border-border-subtle text-text-main font-black tracking-widest text-[10px] px-3.5 py-2.5 outline-none rounded-none cursor-pointer appearance-none uppercase"
+                  >
+                    <option value={0}>QUALQUER AVALIAÇÃO</option>
+                    <option value={3}>3 ESTRELAS OU MAIS</option>
+                    <option value={4}>4 ESTRELAS OU MAIS</option>
+                    <option value={4.5}>4.5 ESTRELAS OU MAIS</option>
+                  </select>
+                  <ChevronDown className="w-4 h-4 text-[#FF3E00] absolute right-3.5 top-3.5 pointer-events-none" />
+                </div>
+              </div>
+
               {/* Clear filters trigger */}
-              {(searchQuery || !selectedCategories.includes('Todas') || showFavoritesOnly || sortBy !== 'default' || maxPriceFilter < 6000) && (
+              {(searchQuery || !selectedCategories.includes('Todas') || showFavoritesOnly || sortBy !== 'default' || maxPriceFilter < 6000 || minRatingFilter > 0) && (
                 <button
                   id="btn-reset-filters"
                   onClick={() => {
@@ -1604,6 +1646,7 @@ export default function App(): React.JSX.Element {
                     setShowFavoritesOnly(false);
                     setSortBy('default');
                     setMaxPriceFilter(6000);
+                    setMinRatingFilter(0);
                     triggerNotification('Todos os filtros e buscas limpos', 'info');
                   }}
                   className="w-full py-2 bg-bg-nested hover:bg-bg-card text-text-main text-[10px] font-black tracking-widest uppercase border border-border-subtle"
@@ -1702,7 +1745,7 @@ export default function App(): React.JSX.Element {
           <div className="flex-1 w-full">
             
             {/* Active search tag and counts */}
-            {(searchQuery || !selectedCategories.includes('Todas' ) || showFavoritesOnly || sortBy !== 'default' || maxPriceFilter < 6000) && (
+            {(searchQuery || !selectedCategories.includes('Todas' ) || showFavoritesOnly || sortBy !== 'default' || maxPriceFilter < 6000 || minRatingFilter > 0) && (
               <div className="bg-bg-card border border-border-subtle p-4 mb-6 text-xs font-mono flex items-center justify-between flex-wrap gap-2">
                 <div className="flex items-center gap-2 text-text-muted">
                   <Info className="w-4 h-4 text-[#FF3E00]" />
@@ -1739,6 +1782,7 @@ export default function App(): React.JSX.Element {
                       setShowFavoritesOnly(false);
                       setSortBy('default');
                       setMaxPriceFilter(6000);
+                      setMinRatingFilter(0);
                     }}
                     className="px-5 py-3 bg-[#FF3E00] hover:bg-[#ff551f] text-white text-[10px] font-black tracking-widest uppercase"
                   >

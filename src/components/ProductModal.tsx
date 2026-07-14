@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
-import { X, Star, ExternalLink, MessageSquare, Plus, AlertCircle, ShoppingBag, Check, Share2, Camera, Package, Mail } from 'lucide-react';
+import { X, Star, Heart, ExternalLink, MessageSquare, Plus, AlertCircle, ShoppingBag, Check, Share2, Camera, Package, Mail } from 'lucide-react';
 import { Product, Review, User } from '../types';
 import { Tooltip } from './Tooltip';
 import { findGlossaryTerm } from '../data/glossary';
@@ -380,7 +380,7 @@ export default function ProductModal({
                       }`}
                       title={isFavorite ? "Remover dos Favoritos" : "Adicionar aos Favoritos"}
                     >
-                      <Star
+                      <Heart
                         className={`w-5 h-5 ${isFavorite ? 'fill-white text-white' : ''}`}
                       />
                     </button>
