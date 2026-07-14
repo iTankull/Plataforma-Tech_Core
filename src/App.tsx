@@ -466,17 +466,16 @@ export default function App(): React.JSX.Element {
       result = result.filter((p) => favorites.includes(p.id));
     }
 
-    // Advanced Search system
+    // Advanced Search system - limited to product title (name) and category (badge) for better results (accent-insensitive)
     if (searchQuery.trim()) {
-      const query = searchQuery.toLowerCase().trim();
+      const removeAccents = (str: string) =>
+        str.normalize("NFD").replace(/[\u0300-\u036f]/g, "");
+
+      const query = removeAccents(searchQuery.toLowerCase().trim());
       result = result.filter((p) => {
-        const matchesName = p.name.toLowerCase().includes(query);
-        const matchesCat = p.category.toLowerCase().includes(query);
-        const matchesDesc = p.description.toLowerCase().includes(query);
-        const matchesSpecs = Object.entries(p.specs).some(([k, v]) =>
-          k.toLowerCase().includes(query) || String(v).toLowerCase().includes(query)
-        );
-        return matchesName || matchesCat || matchesDesc || matchesSpecs;
+        const matchesName = removeAccents(p.name.toLowerCase()).includes(query);
+        const matchesCat = removeAccents(p.category.toLowerCase()).includes(query);
+        return matchesName || matchesCat;
       });
     }
 
