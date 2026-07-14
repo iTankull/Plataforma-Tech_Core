@@ -583,7 +583,7 @@ export default function ProductModal({
                           <div className="flex">
                             {[1, 2, 3, 4, 5].map((star) => (
                               <Star
-                                key={`star-rev-${star}`}
+                                key={`star-rev-${review.id}-${star}`}
                                 className={`w-3 h-3 ${
                                   star <= review.rating
                                     ? 'fill-[#FF3E00] text-[#FF3E00]'

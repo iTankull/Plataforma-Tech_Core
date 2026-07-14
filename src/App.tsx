@@ -256,6 +256,29 @@ export default function App(): React.JSX.Element {
     }
   }, [currentUser]);
 
+  // --- Deep Link Product Loading ---
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+    const prodId = params.get('product');
+    if (prodId) {
+      const found = products.find((p) => p.id === prodId);
+      if (found) {
+        setSelectedProduct(found);
+      }
+    }
+  }, [products]);
+
+  // --- Sync Selected Product with URL ---
+  useEffect(() => {
+    const url = new URL(window.location.href);
+    if (selectedProduct) {
+      url.searchParams.set('product', selectedProduct.id);
+    } else {
+      url.searchParams.delete('product');
+    }
+    window.history.replaceState({}, '', url.pathname + url.search + url.hash);
+  }, [selectedProduct]);
+
   // --- Show Global Notification ---
   const triggerNotification = (text: string, type: 'success' | 'info' | 'error' = 'success') => {
     setGlobalNotification({ text, type });
@@ -793,11 +816,11 @@ export default function App(): React.JSX.Element {
 
           {/* Compact Row grid of recently added products */}
           <div className="grid grid-cols-4 gap-4">
-            {recentlyAddedProducts.map((product) => {
+            {recentlyAddedProducts.map((product, index) => {
               const discountedPrice = product.price * 0.55;
               return (
                 <div
-                  key={`recent-${product.id}`}
+                  key={`recent-${product.id}-${index}`}
                   onClick={() => setSelectedProduct(product)}
                   className="bg-bg-nested border border-border-subtle hover:border-[#FF3E00] p-2 flex gap-3 h-20 items-center group cursor-pointer transition-all duration-300 relative overflow-hidden text-text-main"
                 >
@@ -877,12 +900,12 @@ export default function App(): React.JSX.Element {
             
             <div className="relative">
               <div className="flex gap-2 overflow-x-auto pb-2 scrollbar-none snap-x -mx-4 px-4 sm:-mx-6 sm:px-6">
-                {CATEGORIES.map((cat) => {
+                {CATEGORIES.map((cat, index) => {
                   const isActive = selectedCategories.includes(cat.id) && !showFavoritesOnly;
                   const IconComponent = cat.icon;
                   return (
                     <button
-                      key={cat.id}
+                      key={`mobile-cat-${cat.id}-${index}`}
                       onClick={() => handleToggleCategory(cat.id)}
                       className={`snap-start shrink-0 px-4 py-2.5 text-xs font-black tracking-wider uppercase border-2 transition-all flex items-center gap-2 rounded-none ${
                         isActive
@@ -990,12 +1013,12 @@ export default function App(): React.JSX.Element {
             <div className="w-full">
               <h3 className="text-[10px] font-black tracking-[0.25em] mb-4 text-[#FF3E00] uppercase">LISTA DE CATEGORIAS</h3>
               <ul className="space-y-2 max-h-[520px] overflow-y-auto pr-2 custom-scrollbar scrollbar-thin scrollbar-thumb-border-subtle scrollbar-track-transparent">
-                {CATEGORIES.map((cat) => {
+                {CATEGORIES.map((cat, index) => {
                   const isActive = selectedCategories.includes(cat.id) && !showFavoritesOnly;
                   return (
                     <li
                       id={`cat-item-${cat.id}`}
-                      key={cat.id}
+                      key={`desktop-cat-${cat.id}-${index}`}
                       onClick={() => handleToggleCategory(cat.id)}
                       className={`text-sm font-black tracking-tight cursor-pointer uppercase py-1 border-b transition-all duration-150 flex items-center justify-between ${
                         isActive
@@ -1154,9 +1177,9 @@ export default function App(): React.JSX.Element {
                 className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-6 md:gap-8"
               >
                 <AnimatePresence>
-                  {filteredAndSortedProducts.map((product) => (
+                  {filteredAndSortedProducts.map((product, index) => (
                     <ProductCard
-                      key={product.id}
+                      key={`${product.id}-${index}`}
                       product={product}
                       isFavorite={favorites.includes(product.id)}
                       onToggleFavorite={(e) => handleToggleFavorite(product.id, e)}
