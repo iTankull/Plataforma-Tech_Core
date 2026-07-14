@@ -1,6 +1,6 @@
 import React from 'react';
 import { motion } from 'motion/react';
-import { Star, Heart, ExternalLink, ArrowUpRight } from 'lucide-react';
+import { Star, Heart, ExternalLink, ArrowUpRight, ShoppingCart } from 'lucide-react';
 import { Product } from '../types';
 import { Tooltip } from './Tooltip';
 import { findGlossaryTerm } from '../data/glossary';
@@ -11,6 +11,7 @@ interface ProductCardProps {
   isFavorite: boolean;
   onToggleFavorite: (e: React.MouseEvent) => void;
   onClickDetails: () => void;
+  onAddToCart: (e: React.MouseEvent) => void;
 }
 
 const getCategoryStyle = (category: string) => {
@@ -56,6 +57,7 @@ export default function ProductCard({
   isFavorite,
   onToggleFavorite,
   onClickDetails,
+  onAddToCart,
 }: ProductCardProps): React.JSX.Element {
   const renderStars = (rating: number) => {
     const stars = [];
@@ -196,17 +198,29 @@ export default function ProductCard({
       </div>
 
       {/* Action Button at the bottom */}
-      <div 
-        onClick={onClickDetails}
-        className={`p-4 flex justify-between items-center transition-all cursor-pointer font-black tracking-widest text-xs border-t border-border-subtle ${
+      <button 
+        id={`btn-cart-${product.id}`}
+        onClick={(e) => {
+          e.stopPropagation();
+          if (product.stock === 0) {
+            onClickDetails();
+          } else {
+            onAddToCart(e);
+          }
+        }}
+        className={`w-full p-4 flex justify-between items-center transition-all cursor-pointer font-black tracking-widest text-xs border-t border-border-subtle ${
           product.stock === 0 
             ? 'bg-bg-nested text-text-dim/80 hover:text-text-main hover:bg-bg-card' 
             : 'bg-text-main text-bg-main group-hover:bg-[#FF3E00] group-hover:text-white'
         }`}
       >
-        <span>{product.stock === 0 ? 'VER DETALHES (ESGOTADO)' : 'DETALHES / ADQUIRIR'}</span>
-        <span className="text-sm font-bold">{"->"}</span>
-      </div>
+        <span>{product.stock === 0 ? 'VER DETALHES (ESGOTADO)' : 'ADICIONAR AO CARRINHO'}</span>
+        {product.stock === 0 ? (
+          <span className="text-sm font-bold">{"->"}</span>
+        ) : (
+          <ShoppingCart className="w-4 h-4" />
+        )}
+      </button>
     </motion.div>
   );
 }

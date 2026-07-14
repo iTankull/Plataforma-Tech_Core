@@ -1161,6 +1161,7 @@ export default function App(): React.JSX.Element {
                       isFavorite={favorites.includes(product.id)}
                       onToggleFavorite={(e) => handleToggleFavorite(product.id, e)}
                       onClickDetails={() => setSelectedProduct(product)}
+                      onAddToCart={() => handleAddToCart(product)}
                     />
                   ))}
                 </AnimatePresence>
