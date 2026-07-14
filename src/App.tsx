@@ -319,6 +319,80 @@ export default function App(): React.JSX.Element {
     localStorage.setItem('tech_in_app_notifications', JSON.stringify(inAppNotifications));
   }, [inAppNotifications]);
 
+  // --- Auto-update and version tracking ---
+  const [loadedVersion, setLoadedVersion] = useState<string | null>(null);
+  const [hasNotifiedUpdateFor, setHasNotifiedUpdateFor] = useState<string | null>(null);
+
+  // Fetch initial version on mount
+  useEffect(() => {
+    // Clean any simulated version from previous sessions so that the demo resets fresh
+    localStorage.removeItem('tech_simulated_server_version');
+
+    fetch('/version.json')
+      .then(res => res.json())
+      .then(data => {
+        const initialVer = data?.timestamp || "1.0.2";
+        setLoadedVersion(initialVer);
+      })
+      .catch(() => {
+        setLoadedVersion("1.0.2");
+      });
+  }, []);
+
+  // Poll for code or stock updates
+  useEffect(() => {
+    if (!loadedVersion) return;
+
+    const checkUpdates = () => {
+      const simulatedVersion = localStorage.getItem('tech_simulated_server_version');
+      
+      const processVersionCheck = (latestVer: string) => {
+        if (latestVer !== loadedVersion) {
+          if (hasNotifiedUpdateFor !== latestVer) {
+            const newNotif: InAppNotification = {
+              id: `notif-update-${latestVer}`,
+              productId: '',
+              productName: '📢 ATUALIZAÇÃO DISPONÍVEL',
+              productImage: 'https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?auto=format&fit=crop&q=80&w=150',
+              message: 'O código do site ou o acervo de estoque foram atualizados! Clique aqui para recarregar a página e receber os novos lotes de produtos e correções.',
+              date: new Date().toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' }),
+              read: false
+            };
+
+            setInAppNotifications(prev => {
+              if (prev.some(n => n.id === newNotif.id)) return prev;
+              return [newNotif, ...prev];
+            });
+
+            setHasNotifiedUpdateFor(latestVer);
+            triggerNotification('📢 Nova atualização de código e estoque detectada! Clique em Avisos.', 'info');
+          }
+        }
+      };
+
+      if (simulatedVersion) {
+        processVersionCheck(simulatedVersion);
+      } else {
+        fetch('/version.json')
+          .then(res => res.json())
+          .then(data => {
+            if (data && data.timestamp) {
+              processVersionCheck(data.timestamp);
+            }
+          })
+          .catch(err => console.log('Error checking version updates:', err));
+      }
+    };
+
+    const initialTimeout = setTimeout(checkUpdates, 2000);
+    const interval = setInterval(checkUpdates, 10000); // Check every 10 seconds
+
+    return () => {
+      clearTimeout(initialTimeout);
+      clearInterval(interval);
+    };
+  }, [loadedVersion, hasNotifiedUpdateFor]);
+
   useEffect(() => {
     // One-time update of all products to have stock
     const initialized = localStorage.getItem('tech_stock_init_v2');
@@ -894,6 +968,10 @@ export default function App(): React.JSX.Element {
                             <div
                               key={`${notif.id}-${index}`}
                               onClick={() => {
+                                if (notif.id.startsWith('notif-update-')) {
+                                  window.location.reload();
+                                  return;
+                                }
                                 const foundProd = products.find(p => p.id === notif.productId);
                                 if (foundProd) {
                                   setSelectedProduct(foundProd);
@@ -1603,6 +1681,17 @@ export default function App(): React.JSX.Element {
                     title="Reabastecer todos para simular recebimento"
                   >
                     REABASTECER
+                  </button>
+                  <button
+                    onClick={() => {
+                      const newSimulatedVer = `sim-ver-${Date.now()}`;
+                      localStorage.setItem('tech_simulated_server_version', newSimulatedVer);
+                      triggerNotification('Simulação: Código e estoque atualizados no servidor!', 'info');
+                    }}
+                    className="col-span-2 py-2 px-2 bg-[#FF3E00]/10 border border-[#FF3E00]/30 hover:bg-[#FF3E00] hover:text-white text-[8px] text-[#FF3E00] font-black uppercase tracking-wider transition-all cursor-pointer text-center"
+                    title="Simular novos lotes de estoque e implantação de código no servidor para disparar o aviso de recarga"
+                  >
+                    📢 SIMULAR ATUALIZAÇÃO DO SERVIDOR (CÓDIGO/ESTOQUE)
                   </button>
                 </div>
               </div>

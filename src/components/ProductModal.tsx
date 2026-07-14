@@ -16,7 +16,7 @@ const getAdditionalImages = (productId: string, primaryImage: string): { url: st
   if (lowerId.includes('keychron') || lowerId.includes('gmmk') || lowerId.includes('keyboard')) {
     images.push(
       {
-        url: 'https://images.unsplash.com/photo-1541140111813-8222e9d90981?auto=format&fit=crop&q=80&w=600',
+        url: 'https://images.unsplash.com/photo-1530587191325-3db32d826c18?auto=format&fit=crop&q=80&w=600',
         label: "EMBALAGEM",
         description: "Caixa original preservada com todos os divisórios internos de proteção."
       },
@@ -205,10 +205,67 @@ export default function ProductModal({
         Fotos & Inspeção
       </h3>
       <p className="text-text-muted text-[10px] uppercase font-mono tracking-wider mb-4 leading-relaxed hidden md:block">
-        Selecione as miniaturas abaixo para inspecionar os detalhes reais do lote técnico:
+        Clique na imagem principal ou utilize as setas e miniaturas abaixo para inspecionar os detalhes reais do lote técnico:
       </p>
-      
-      {/* Thumbnails grid */}
+
+      {/* Main Large Interactive Photo Display - highly visual, focuses the user */}
+      <div className="relative w-full aspect-[16/10] bg-bg-card border-2 border-border-subtle hover:border-[#FF3E00] transition-all duration-300 group overflow-hidden mb-4">
+        {/* Main Photo Image */}
+        <img
+          src={additionalPhotos[activeImageIndex].url}
+          alt={additionalPhotos[activeImageIndex].label}
+          onClick={() => setIsZoomOpen(true)}
+          className="w-full h-full object-cover cursor-zoom-in group-hover:scale-[1.02] transition-all duration-500"
+          referrerPolicy="no-referrer"
+        />
+
+        {/* Hover / Click to Zoom Overlay Badge */}
+        <div 
+          onClick={() => setIsZoomOpen(true)}
+          className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-all duration-200 flex flex-col items-center justify-center gap-2 cursor-zoom-in"
+        >
+          <div className="p-3 bg-black/85 border border-white/20 text-white flex items-center gap-2 font-mono text-[9px] font-black uppercase tracking-widest scale-95 group-hover:scale-100 transition-all duration-300">
+            <Camera className="w-3.5 h-3.5 text-[#FF3E00] animate-pulse" />
+            Clique para Ampliar
+          </div>
+        </div>
+
+        {/* Navigation Arrows inside the main image for extremely fast, intuitive swapping on mobile */}
+        <div className="absolute inset-x-2 top-1/2 -translate-y-1/2 flex justify-between pointer-events-none">
+          <button
+            onClick={(e) => {
+              e.stopPropagation();
+              setActiveImageIndex((prev) => (prev - 1 + additionalPhotos.length) % additionalPhotos.length);
+            }}
+            className="pointer-events-auto p-2.5 bg-black/85 hover:bg-[#FF3E00] border border-white/10 hover:border-white text-white text-xs font-black transition-all rounded-none cursor-pointer"
+            title="Anterior"
+          >
+            &lt;
+          </button>
+          <button
+            onClick={(e) => {
+              e.stopPropagation();
+              setActiveImageIndex((prev) => (prev + 1) % additionalPhotos.length);
+            }}
+            className="pointer-events-auto p-2.5 bg-black/85 hover:bg-[#FF3E00] border border-white/10 hover:border-white text-white text-xs font-black transition-all rounded-none cursor-pointer"
+            title="Próxima"
+          >
+            &gt;
+          </button>
+        </div>
+
+        {/* Active image label badge */}
+        <div className="absolute top-3 left-3 bg-[#FF3E00] px-2 py-0.5 text-white text-[8px] font-black tracking-widest uppercase font-mono shadow-md">
+          {additionalPhotos[activeImageIndex].label}
+        </div>
+
+        {/* Pagination Counter Badge */}
+        <div className="absolute bottom-3 right-3 bg-black/85 border border-white/10 px-2 py-0.5 text-white/90 text-[8px] font-mono font-bold uppercase tracking-widest">
+          {activeImageIndex + 1} / {additionalPhotos.length}
+        </div>
+      </div>
+
+      {/* Thumbnails grid - positioned cleanly and looking premium */}
       <div className="grid grid-cols-3 gap-2 md:gap-3 mb-4">
         {additionalPhotos.map((photo, index) => {
           const isActive = index === activeImageIndex;
@@ -217,12 +274,11 @@ export default function ProductModal({
               key={`thumb-rt-${index}`}
               onClick={() => {
                 setActiveImageIndex(index);
-                setIsZoomOpen(true);
               }}
-              className={`group relative aspect-video border-2 overflow-hidden bg-bg-card transition-all duration-200 rounded-none ${
+              className={`group relative aspect-video border-2 overflow-hidden bg-bg-card transition-all duration-200 rounded-none cursor-pointer ${
                 isActive 
                   ? 'border-[#FF3E00]' 
-                  : 'border-border-subtle hover:border-border-subtle'
+                  : 'border-border-subtle hover:border-text-dim'
               }`}
               title={photo.label}
             >
@@ -232,7 +288,9 @@ export default function ProductModal({
                 className="w-full h-full object-cover group-hover:scale-105 transition-all duration-300"
                 referrerPolicy="no-referrer"
               />
-              <div className="absolute inset-x-0 bottom-0 bg-black/85 py-0.5 text-center">
+              <div className={`absolute inset-x-0 bottom-0 py-1 text-center transition-all duration-200 ${
+                isActive ? 'bg-[#FF3E00]' : 'bg-black/85'
+              }`}>
                 <span className="text-[7.5px] font-black tracking-widest text-white uppercase block">
                   {photo.label}
                 </span>
@@ -242,18 +300,26 @@ export default function ProductModal({
         })}
       </div>
 
-      {/* Selected Photo Rich assessment with click-to-zoom indication */}
+      {/* Selected Photo Rich assessment with click-to-zoom indication and inspection description */}
       <div 
         onClick={() => setIsZoomOpen(true)}
-        className="bg-bg-main border border-border-subtle hover:border-[#FF3E00] p-3 md:p-4 flex items-center gap-3 rounded-none font-mono cursor-pointer transition-all duration-150"
+        className="bg-bg-nested border border-border-subtle hover:border-[#FF3E00] p-3.5 flex flex-col gap-2 rounded-none font-mono cursor-pointer transition-all duration-150 text-left"
         title="Clique para ver em tela cheia"
       >
-        <Package className="w-4 h-4 md:w-5 md:h-5 text-[#FF3E00] shrink-0" />
-        <div className="flex-1">
-          <span className="text-[10px] font-black text-[#FF3E00] tracking-widest block uppercase">
-            {additionalPhotos[activeImageIndex].label} // CLIQUE PARA AMPLIAR
+        <div className="flex items-center gap-2">
+          <Package className="w-4 h-4 text-[#FF3E00] shrink-0" />
+          <div className="flex-1">
+            <span className="text-[10px] font-black text-[#FF3E00] tracking-widest block uppercase">
+              {additionalPhotos[activeImageIndex].label} // DETALHES DE INSPEÇÃO
+            </span>
+          </div>
+          <span className="text-[8px] text-text-dim font-black border border-border-subtle px-1.5 py-0.5 tracking-wider uppercase">
+            AMPLIAR FOTO
           </span>
         </div>
+        <p className="text-[10px] text-text-muted uppercase leading-relaxed font-semibold">
+          {additionalPhotos[activeImageIndex].description}
+        </p>
       </div>
     </div>
   );
