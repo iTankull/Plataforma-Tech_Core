@@ -497,7 +497,7 @@ export default function App(): React.JSX.Element {
 
     // Price Filter
     if (maxPriceFilter < 6000) {
-      result = result.filter((p) => p.price <= maxPriceFilter);
+      result = result.filter((p) => (p.price * 0.55) <= maxPriceFilter);
     }
 
     // Sort Logic
