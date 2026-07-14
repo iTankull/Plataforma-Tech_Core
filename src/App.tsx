@@ -41,10 +41,12 @@ import {
   Cpu,
   Sun,
   Moon,
-  MousePointerClick
+  MousePointerClick,
+  Bell,
+  Mail
 } from 'lucide-react';
 
-import { Product, Review, User, Purchase, PurchaseItem } from './types';
+import { Product, Review, User, Purchase, PurchaseItem, StockAlert, InAppNotification, SimulatedEmail } from './types';
 import { DEFAULT_PRODUCTS, DEFAULT_REVIEWS } from './data/products';
 import ProductCard from './components/ProductCard';
 import ProductModal from './components/ProductModal';
@@ -285,6 +287,177 @@ export default function App(): React.JSX.Element {
     setTimeout(() => {
       setGlobalNotification(null);
     }, 4000);
+  };
+
+  // --- Stock Alert & Notification States ---
+  const [stockAlerts, setStockAlerts] = useState<StockAlert[]>(() => {
+    try {
+      const stored = localStorage.getItem('tech_stock_alerts');
+      return stored ? JSON.parse(stored) : [];
+    } catch {
+      return [];
+    }
+  });
+
+  const [inAppNotifications, setInAppNotifications] = useState<InAppNotification[]>(() => {
+    try {
+      const stored = localStorage.getItem('tech_in_app_notifications');
+      return stored ? JSON.parse(stored) : [];
+    } catch {
+      return [];
+    }
+  });
+
+  const [simulatedEmail, setSimulatedEmail] = useState<SimulatedEmail | null>(null);
+  const [isNotificationOpen, setIsNotificationOpen] = useState<boolean>(false);
+
+  useEffect(() => {
+    localStorage.setItem('tech_stock_alerts', JSON.stringify(stockAlerts));
+  }, [stockAlerts]);
+
+  useEffect(() => {
+    localStorage.setItem('tech_in_app_notifications', JSON.stringify(inAppNotifications));
+  }, [inAppNotifications]);
+
+  useEffect(() => {
+    // One-time update of all products to have stock
+    const initialized = localStorage.getItem('tech_stock_init_v2');
+    if (!initialized) {
+      const updated = products.map(p => ({ ...p, stock: Math.max(p.stock, 5) }));
+      setProducts(updated);
+      localStorage.setItem('tech_products', JSON.stringify(updated));
+      localStorage.setItem('tech_stock_init_v2', 'true');
+    }
+  }, []);
+
+  const handleDeleteNotification = (id: string, e?: React.MouseEvent) => {
+    if (e) {
+      e.stopPropagation();
+    }
+    setInAppNotifications(prev => prev.filter(n => n.id !== id));
+    triggerNotification('Notificação apagada.', 'info');
+  };
+
+  const handleClearAllNotifications = () => {
+    setInAppNotifications([]);
+    triggerNotification('Todas as notificações foram apagadas.', 'info');
+  };
+
+  const handleRestockAll = () => {
+    const updated = products.map((prod) => {
+      const oldStock = prod.stock;
+      const newStock = 10;
+
+      if (oldStock === 0) {
+        // Trigger Email Alerts
+        const activeAlerts = stockAlerts.filter(a => a.productId === prod.id);
+        if (activeAlerts.length > 0) {
+          const alertToSend = activeAlerts[0];
+          setSimulatedEmail({
+            to: alertToSend.email,
+            subject: `⚡ O SEU FAVORITO "${prod.name.toUpperCase()}" VOLTOU AO ESTOQUE!`,
+            body: `Olá! Temos ótimas notícias para você.\n\nO equipamento "${prod.name}" que você tanto queria e cadastrou alerta está de volta ao nosso acervo!\n\nEle foi adicionado recentemente e conta com o nosso desconto padrão de 45% FLAT já aplicado sobre o valor original.\n\nAproveite e finalize sua compra simulada antes que acabe novamente!`,
+            date: new Date().toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' }),
+            productName: prod.name,
+            productImage: prod.image
+          });
+          setStockAlerts(prev => prev.filter(a => a.productId !== prod.id));
+        }
+
+        // Trigger In-App Notification if favorited
+        const isFav = favorites.includes(prod.id);
+        if (isFav) {
+          const newNotif: InAppNotification = {
+            id: `notif-${Date.now()}-${prod.id}`,
+            productId: prod.id,
+            productName: prod.name,
+            productImage: prod.image,
+            message: `O item "${prod.name}" que você favoritou quando estava esgotado acaba de receber reabastecimento recente no catálogo! Aproveite!`,
+            date: new Date().toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' }),
+            read: false
+          };
+          setInAppNotifications(prev => [newNotif, ...prev]);
+          triggerNotification(`Alerta: "${prod.name}" está disponível novamente!`, 'success');
+        }
+      }
+
+      return { ...prod, stock: newStock };
+    });
+
+    setProducts(updated);
+    localStorage.setItem('tech_products', JSON.stringify(updated));
+
+    if (selectedProduct) {
+      setSelectedProduct({ ...selectedProduct, stock: 10 });
+    }
+
+    triggerNotification('Todos os produtos reabastecidos com estoque!', 'success');
+  };
+
+  const handleZeroAllStock = () => {
+    const updated = products.map(prod => ({ ...prod, stock: 0 }));
+    setProducts(updated);
+    localStorage.setItem('tech_products', JSON.stringify(updated));
+
+    if (selectedProduct) {
+      setSelectedProduct({ ...selectedProduct, stock: 0 });
+    }
+
+    triggerNotification('Todos os estoques foram zerados para testes!', 'info');
+  };
+
+  const handleUpdateStock = (productId: string, newStock: number) => {
+    const productToUpdate = products.find(p => p.id === productId);
+    if (!productToUpdate) return;
+
+    const oldStock = productToUpdate.stock;
+
+    const updatedProducts = products.map((prod) => {
+      if (prod.id === productId) {
+        return { ...prod, stock: newStock };
+      }
+      return prod;
+    });
+    setProducts(updatedProducts);
+    localStorage.setItem('tech_products', JSON.stringify(updatedProducts));
+
+    if (selectedProduct && selectedProduct.id === productId) {
+      setSelectedProduct({ ...selectedProduct, stock: newStock });
+    }
+
+    if (oldStock === 0 && newStock > 0) {
+      // Trigger Email Alerts
+      const activeAlerts = stockAlerts.filter(a => a.productId === productId);
+      if (activeAlerts.length > 0) {
+        const alertToSend = activeAlerts[0];
+        setSimulatedEmail({
+          to: alertToSend.email,
+          subject: `⚡ O SEU FAVORITO "${productToUpdate.name.toUpperCase()}" VOLTOU AO ESTOQUE!`,
+          body: `Olá! Temos ótimas notícias para você.\n\nO equipamento "${productToUpdate.name}" que você tanto queria e cadastrou alerta está de volta ao nosso acervo!\n\nEle foi adicionado recentemente e conta com o nosso desconto padrão de 45% FLAT já aplicado sobre o valor original.\n\nAproveite e finalize sua compra simulada antes que acabe novamente!`,
+          date: new Date().toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' }),
+          productName: productToUpdate.name,
+          productImage: productToUpdate.image
+        });
+
+        setStockAlerts(prev => prev.filter(a => a.productId !== productId));
+      }
+
+      // Trigger In-App Notification if favorited
+      const isFav = favorites.includes(productId);
+      if (isFav) {
+        const newNotif: InAppNotification = {
+          id: `notif-${Date.now()}`,
+          productId: productId,
+          productName: productToUpdate.name,
+          productImage: productToUpdate.image,
+          message: `O item "${productToUpdate.name}" que você favoritou quando estava esgotado acaba de receber reabastecimento recente no catálogo! Aproveite!`,
+          date: new Date().toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' }),
+          read: false
+        };
+        setInAppNotifications(prev => [newNotif, ...prev]);
+        triggerNotification(`Alerta: "${productToUpdate.name}" está disponível novamente!`, 'success');
+      }
+    }
   };
 
   // --- Auth Handlers ---
@@ -611,6 +784,113 @@ export default function App(): React.JSX.Element {
                 <ShoppingCart className="w-3.5 h-3.5 text-[#FF3E00]" />
               </span>
             </button>
+
+            {/* Notification Bell */}
+            <div className="relative">
+              <button
+                id="header-notif-btn"
+                onClick={() => setIsNotificationOpen(!isNotificationOpen)}
+                className="flex flex-col items-end cursor-pointer text-text-muted hover:text-text-main relative"
+                title="Notificações Internas"
+              >
+                <span className="text-[9px] font-black tracking-widest uppercase">NOTIFICAÇÕES</span>
+                <span className="text-lg font-black tracking-tighter flex items-center gap-1">
+                  {inAppNotifications.filter(n => !n.read).length}
+                  <Bell className={`w-3.5 h-3.5 ${inAppNotifications.some(n => !n.read) ? 'text-[#FF3E00] animate-bounce' : 'text-text-dim'}`} />
+                </span>
+              </button>
+              
+              {/* Notification Popover Dropdown */}
+              <AnimatePresence>
+                {isNotificationOpen && (
+                  <motion.div
+                    initial={{ opacity: 0, y: 15 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    exit={{ opacity: 0, y: 15 }}
+                    className="absolute right-0 mt-3 w-80 bg-bg-card border-2 border-border-main shadow-2xl p-4 z-50 font-mono text-xs text-text-main"
+                  >
+                    <div className="flex items-center justify-between border-b border-border-very-subtle pb-2 mb-3 gap-2">
+                      <span className="font-black text-[10px] tracking-widest uppercase text-[#FF3E00] whitespace-nowrap">
+                        CENTRAL DE AVISOS
+                      </span>
+                      {inAppNotifications.length > 0 && (
+                        <div className="flex items-center gap-2 shrink-0 select-none">
+                          <button
+                            onClick={() => {
+                              setInAppNotifications(prev => prev.map(n => ({ ...n, read: true })));
+                              triggerNotification('Todas as notificações marcadas como lidas', 'info');
+                            }}
+                            className="text-[8px] font-black tracking-wider text-text-dim hover:text-[#FF3E00] uppercase cursor-pointer whitespace-nowrap"
+                            title="Marcar todas as notificações como lidas"
+                          >
+                            [ MARCAR LIDOS ]
+                          </button>
+                          <span className="text-text-dim/50 text-[8px]">|</span>
+                          <button
+                            onClick={handleClearAllNotifications}
+                            className="p-1 text-text-dim hover:text-[#FF3E00] transition-colors cursor-pointer flex items-center justify-center rounded hover:bg-bg-nested"
+                            title="Apagar permanentemente todas as notificações"
+                          >
+                            <Trash2 className="w-3.5 h-3.5" />
+                          </button>
+                        </div>
+                      )}
+                    </div>
+                    
+                    <div className="space-y-3 max-h-64 overflow-y-auto pr-1 scrollbar-thin">
+                      {inAppNotifications.length === 0 ? (
+                        <div className="text-center py-6 text-text-dim text-[10px] uppercase font-bold">
+                          Nenhuma notificação por enquanto.
+                        </div>
+                      ) : (
+                        inAppNotifications.map((notif) => (
+                          <div
+                            key={notif.id}
+                            onClick={() => {
+                              const foundProd = products.find(p => p.id === notif.productId);
+                              if (foundProd) {
+                                setSelectedProduct(foundProd);
+                              }
+                              setInAppNotifications(prev => prev.map(n => n.id === notif.id ? { ...n, read: true } : n));
+                              setIsNotificationOpen(false);
+                            }}
+                            className={`p-2.5 border transition-all duration-150 cursor-pointer flex gap-3 items-center relative group ${
+                              notif.read ? 'bg-bg-nested border-border-very-subtle/50 text-text-muted' : 'bg-bg-nested border-[#FF3E00]/30 text-text-main hover:border-[#FF3E00]'
+                            }`}
+                          >
+                            <img
+                              src={notif.productImage}
+                              alt={notif.productName}
+                              className="w-8 h-8 object-cover border border-border-subtle bg-bg-card shrink-0"
+                            />
+                            <div className="min-w-0 flex-grow pr-5">
+                              <p className="text-[9px] leading-tight font-black uppercase text-text-main truncate">
+                                {notif.productName}
+                              </p>
+                              <p className="text-[8px] leading-relaxed text-text-dim uppercase mt-0.5 font-sans">
+                                {notif.message}
+                              </p>
+                              <span className="text-[7px] text-[#FF3E00] font-bold block mt-1">
+                                RECEBIDO ÀS {notif.date}
+                              </span>
+                            </div>
+
+                            {/* Individual Delete/Dismiss Button */}
+                            <button
+                              onClick={(e) => handleDeleteNotification(notif.id, e)}
+                              className="absolute right-2 top-2.5 p-1 text-text-dim hover:text-[#FF3E00] transition-colors rounded cursor-pointer opacity-0 group-hover:opacity-100 focus:opacity-100"
+                              title="Apagar esta notificação"
+                            >
+                              <Trash2 className="w-3 h-3" />
+                            </button>
+                          </div>
+                        ))
+                      )}
+                    </div>
+                  </motion.div>
+                )}
+              </AnimatePresence>
+            </div>
 
             {/* Theme Switcher Button */}
             <button
@@ -1003,6 +1283,86 @@ export default function App(): React.JSX.Element {
           </div>
         </div>
 
+        {/* Mobile Simulation Control Panel */}
+        <div className="lg:hidden w-full mb-8 bg-bg-card border-2 border-border-main p-4 text-text-main font-mono text-xs">
+          <details className="group">
+            <summary className="list-none flex items-center justify-between font-black text-[10px] tracking-[0.25em] text-[#FF3E00] uppercase cursor-pointer select-none">
+              <span className="flex items-center gap-1.5">
+                ⚡ SIMULADOR DE ESTOQUE [ ADMIN ]
+              </span>
+              <span className="text-text-muted group-open:rotate-180 transition-transform duration-150">
+                [ VER CONTROLES ]
+              </span>
+            </summary>
+            
+            <div className="mt-4 space-y-3 pt-3 border-t border-border-subtle">
+              <p className="text-[9px] text-text-dim uppercase leading-relaxed mb-3 font-bold">
+                Gerencie o acervo para disparar alertas e simular reabastecimento de produtos favoritados!
+              </p>
+              
+              <div className="space-y-2.5 max-h-56 overflow-y-auto pr-1">
+                {products.map((prod) => {
+                  const isOutOfStock = prod.stock === 0;
+                  const activeAlertsCount = stockAlerts.filter(a => a.productId === prod.id).length;
+                  const isFav = favorites.includes(prod.id);
+                  return (
+                    <div key={`sim-mobile-${prod.id}`} className="flex items-center justify-between gap-2 border-b border-border-very-subtle pb-2 last:border-b-0 last:pb-0">
+                      <div className="min-w-0 flex-1">
+                        <div className="font-bold uppercase truncate text-[9px] text-text-main flex items-center gap-1">
+                          {isFav && <Heart className="w-2.5 h-2.5 text-[#FF3E00] fill-[#FF3E00] shrink-0" />}
+                          <span className="truncate">{prod.name}</span>
+                        </div>
+                        <div className="flex gap-2 text-[8px] text-text-muted mt-0.5 font-bold">
+                          <span className={isOutOfStock ? "text-[#FF3E00] font-black" : "text-green-500"}>
+                            {isOutOfStock ? "ESGOTADO" : `QTD: ${prod.stock}`}
+                          </span>
+                          {activeAlertsCount > 0 && (
+                            <span className="text-[#FF3E00] animate-pulse flex items-center gap-0.5">
+                              <Mail className="w-2 h-2" /> {activeAlertsCount} ALERTA(S)
+                            </span>
+                          )}
+                        </div>
+                      </div>
+                      <div className="flex gap-1 shrink-0">
+                        <button
+                          onClick={() => handleUpdateStock(prod.id, Math.max(0, prod.stock - 1))}
+                          className="w-6 h-6 border border-border-subtle hover:border-[#FF3E00] flex items-center justify-center font-black bg-bg-nested text-text-muted hover:text-[#FF3E00] text-[10px] cursor-pointer"
+                        >
+                          -
+                        </button>
+                        <button
+                          onClick={() => handleUpdateStock(prod.id, prod.stock + 1)}
+                          className="w-6 h-6 border border-border-subtle hover:border-[#FF3E00] flex items-center justify-center font-black bg-bg-nested text-text-muted hover:text-[#FF3E00] text-[10px] cursor-pointer"
+                        >
+                          +
+                        </button>
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+
+              {/* Bulk Actions for testing */}
+              <div className="grid grid-cols-2 gap-2 mt-3 pt-3 border-t border-border-subtle">
+                <button
+                  onClick={handleZeroAllStock}
+                  className="py-2 px-3 bg-bg-nested border border-border-subtle hover:bg-[#FF3E00]/10 hover:border-[#FF3E00]/30 text-[10px] text-text-muted hover:text-[#FF3E00] font-black uppercase tracking-wider transition-all cursor-pointer"
+                  title="Zerar todos os estoques para cadastrar alertas"
+                >
+                  ZERAR ESTOQUES
+                </button>
+                <button
+                  onClick={handleRestockAll}
+                  className="py-2 px-3 bg-text-main border border-transparent hover:bg-[#FF3E00] hover:text-white text-[10px] text-bg-main font-black uppercase tracking-wider transition-all cursor-pointer"
+                  title="Reabastecer todos para simular recebimento"
+                >
+                  REABASTECER
+                </button>
+              </div>
+            </div>
+          </details>
+        </div>
+
         {/* Categories, Search and Filter Section in Sidebar layout */}
         <div className="flex flex-col lg:flex-row gap-8 items-start">
           
@@ -1120,6 +1480,79 @@ export default function App(): React.JSX.Element {
                   LIMPAR FILTROS ATIVOS
                 </button>
               )}
+
+              {/* Simulation Control Panel */}
+              <div className="border-2 border-border-main bg-bg-card p-4 font-mono text-xs mt-4">
+                <h3 className="text-[10px] font-black tracking-[0.25em] mb-2 text-[#FF3E00] uppercase flex items-center justify-between">
+                  <span>ESTOQUE SIMULADOR</span>
+                  <span className="bg-[#FF3E00]/10 text-[#FF3E00] px-1.5 py-0.5 text-[8px] tracking-normal font-sans font-black">[ ADMIN ]</span>
+                </h3>
+                <p className="text-[9px] text-text-dim uppercase leading-relaxed mb-3 font-bold">
+                  Gerencie o acervo para disparar alertas e simular reabastecimento de produtos favoritados!
+                </p>
+                
+                <div className="space-y-2.5 max-h-56 overflow-y-auto pr-1 custom-scrollbar">
+                  {products.map((prod) => {
+                    const isOutOfStock = prod.stock === 0;
+                    const activeAlertsCount = stockAlerts.filter(a => a.productId === prod.id).length;
+                    const isFav = favorites.includes(prod.id);
+                    return (
+                      <div key={`sim-${prod.id}`} className="flex items-center justify-between gap-2 border-b border-border-very-subtle pb-2 last:border-b-0 last:pb-0">
+                        <div className="min-w-0 flex-1">
+                          <div className="font-bold uppercase truncate text-[9px] text-text-main flex items-center gap-1">
+                            {isFav && <Heart className="w-2.5 h-2.5 text-[#FF3E00] fill-[#FF3E00] shrink-0" />}
+                            <span className="truncate">{prod.name}</span>
+                          </div>
+                          <div className="flex gap-2 text-[8px] text-text-muted mt-0.5 font-bold">
+                            <span className={isOutOfStock ? "text-[#FF3E00] font-black" : "text-green-500"}>
+                              {isOutOfStock ? "ESGOTADO" : `QTD: ${prod.stock}`}
+                            </span>
+                            {activeAlertsCount > 0 && (
+                              <span className="text-[#FF3E00] animate-pulse flex items-center gap-0.5">
+                                <Mail className="w-2 h-2" /> {activeAlertsCount} ALERTA(S)
+                              </span>
+                            )}
+                          </div>
+                        </div>
+                        <div className="flex gap-1 shrink-0">
+                          <button
+                            onClick={() => handleUpdateStock(prod.id, Math.max(0, prod.stock - 1))}
+                            className="w-5 h-5 border border-border-subtle hover:border-[#FF3E00] flex items-center justify-center font-black bg-bg-nested text-text-muted hover:text-[#FF3E00] text-[9px] cursor-pointer"
+                            title="Remover 1 do Estoque"
+                          >
+                            -
+                          </button>
+                          <button
+                            onClick={() => handleUpdateStock(prod.id, prod.stock + 1)}
+                            className="w-5 h-5 border border-border-subtle hover:border-[#FF3E00] flex items-center justify-center font-black bg-bg-nested text-text-muted hover:text-[#FF3E00] text-[9px] cursor-pointer"
+                            title="Adicionar 1 ao Estoque"
+                          >
+                            +
+                          </button>
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
+
+                {/* Bulk Actions for testing */}
+                <div className="grid grid-cols-2 gap-2 mt-3 pt-3 border-t border-border-very-subtle">
+                  <button
+                    onClick={handleZeroAllStock}
+                    className="py-1.5 px-2 bg-bg-nested border border-border-subtle hover:bg-[#FF3E00]/10 hover:border-[#FF3E00]/30 text-[8px] text-text-muted hover:text-[#FF3E00] font-black uppercase tracking-wider transition-all cursor-pointer"
+                    title="Zerar todos os estoques para cadastrar alertas"
+                  >
+                    ZERAR ESTOQUES
+                  </button>
+                  <button
+                    onClick={handleRestockAll}
+                    className="py-1.5 px-2 bg-text-main border border-transparent hover:bg-[#FF3E00] hover:text-white text-[8px] text-bg-main font-black uppercase tracking-wider transition-all cursor-pointer"
+                    title="Reabastecer todos para simular recebimento"
+                  >
+                    REABASTECER
+                  </button>
+                </div>
+              </div>
             </div>
           </aside>
             
@@ -1231,6 +1664,21 @@ export default function App(): React.JSX.Element {
           }}
           onSimulatePurchase={handleSimulatePurchase}
           onAddToCart={handleAddToCart}
+          onRegisterStockAlert={(productId, email) => {
+            if (!stockAlerts.some(a => a.productId === productId && a.email.toLowerCase() === email.toLowerCase())) {
+              const prodToAlert = products.find(p => p.id === productId);
+              setStockAlerts(prev => [
+                ...prev,
+                {
+                  id: `alert-${Date.now()}`,
+                  productId,
+                  email,
+                  productName: prodToAlert ? prodToAlert.name : 'Produto'
+                }
+              ]);
+            }
+            triggerNotification('Alerta de e-mail ativado!', 'success');
+          }}
         />
       )}
 
@@ -1262,6 +1710,111 @@ export default function App(): React.JSX.Element {
         onAddFunds={handleAddFunds}
         onLogout={handleLogout}
       />
+
+      {/* Simulated Email Popover Notification Overlay */}
+      <AnimatePresence>
+        {simulatedEmail && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="fixed inset-0 bg-black/80 backdrop-blur-sm z-50 flex items-center justify-center p-4 font-mono text-xs animate-none"
+          >
+            <motion.div
+              initial={{ scale: 0.95, y: 20 }}
+              animate={{ scale: 1, y: 0 }}
+              exit={{ scale: 0.95, y: 20 }}
+              className="bg-bg-card border-4 border-border-main w-full max-w-lg shadow-2xl overflow-hidden text-text-main"
+            >
+              {/* Header bar */}
+              <div className="bg-[#FF3E00] text-white p-4 flex items-center justify-between">
+                <div className="flex items-center gap-2">
+                  <Mail className="w-4 h-4 animate-bounce" />
+                  <span className="font-black tracking-widest text-[10px] uppercase">
+                    [ NOTIFICAÇÃO DE E-MAIL SIMULADO ENVIADO ]
+                  </span>
+                </div>
+                <button
+                  onClick={() => setSimulatedEmail(null)}
+                  className="p-1 hover:bg-black/15 text-white transition-colors cursor-pointer"
+                >
+                  <X className="w-4 h-4" />
+                </button>
+              </div>
+
+              {/* Email Content Box */}
+              <div className="p-6 space-y-4">
+                {/* Meta details */}
+                <div className="space-y-1.5 border-b border-border-subtle pb-3 text-[10px] font-bold">
+                  <div className="flex justify-between">
+                    <span className="text-text-dim uppercase">DE:</span>
+                    <span className="text-text-main font-black">ALERTAS@TECHCORE.COM.BR</span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span className="text-text-dim uppercase">PARA:</span>
+                    <span className="text-text-main font-black truncate max-w-xs">{simulatedEmail.to}</span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span className="text-text-dim uppercase">ASSUNTO:</span>
+                    <span className="text-[#FF3E00] font-black truncate">{simulatedEmail.subject}</span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span className="text-text-dim uppercase">DATA:</span>
+                    <span className="text-text-dim font-black">{simulatedEmail.date} (SIMULAÇÃO LOCAL)</span>
+                  </div>
+                </div>
+
+                {/* Email Body */}
+                <div className="p-4 bg-bg-nested border border-border-very-subtle leading-relaxed whitespace-pre-wrap text-[10px] text-text-muted font-bold">
+                  {simulatedEmail.body}
+                </div>
+
+                {/* Simulated product link row */}
+                <div className="flex items-center gap-3 p-3 bg-bg-input border border-border-subtle">
+                  <img
+                    src={simulatedEmail.productImage}
+                    alt={simulatedEmail.productName}
+                    className="w-10 h-10 object-cover border border-border-subtle bg-bg-card shrink-0"
+                  />
+                  <div className="min-w-0 flex-grow">
+                    <h5 className="font-black text-[10px] uppercase text-text-main truncate">
+                      {simulatedEmail.productName}
+                    </h5>
+                    <p className="text-[8px] font-bold text-[#FF3E00] uppercase tracking-wide">
+                      ⚡ ESTOQUE ATUALIZADO — PRONTO PARA COMPRA!
+                    </p>
+                  </div>
+                  <button
+                    onClick={() => {
+                      const found = products.find(p => p.name === simulatedEmail.productName);
+                      if (found) {
+                        setSelectedProduct(found);
+                      }
+                      setSimulatedEmail(null);
+                    }}
+                    className="px-3 py-2 bg-text-main hover:bg-[#FF3E00] text-bg-main hover:text-white font-black text-[9px] tracking-widest uppercase transition-colors shrink-0 cursor-pointer"
+                  >
+                    COMPRAR AGORA
+                  </button>
+                </div>
+              </div>
+
+              {/* Footer action bar */}
+              <div className="bg-bg-nested border-t border-border-subtle p-4 flex justify-between items-center text-[10px]">
+                <span className="text-text-dim font-bold uppercase">
+                  ✓ FLUXO DE SIMULAÇÃO CONCLUÍDO
+                </span>
+                <button
+                  onClick={() => setSimulatedEmail(null)}
+                  className="px-4 py-2 bg-text-main hover:bg-[#FF3E00] hover:text-white text-bg-main text-[9px] font-black tracking-widest uppercase transition-all rounded-none cursor-pointer"
+                >
+                  FECHAR PREVIEW DO E-MAIL
+                </button>
+              </div>
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
     </div>
   );
 }

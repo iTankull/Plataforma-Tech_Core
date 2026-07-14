@@ -17,7 +17,7 @@ export const DEFAULT_PRODUCTS: Product[] = [
       'Bateria': '4000 mAh (Até 300 horas)',
       'Compatibilidade': 'macOS / Windows / Linux'
     },
-    stock: 3,
+    stock: 10,
     observations: 'Seminovo; excelente estado; sem marcas de uso; na caixa original com cabo USB-C.'
   },
   {

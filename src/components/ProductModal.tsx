@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
-import { X, Star, ExternalLink, MessageSquare, Plus, AlertCircle, ShoppingBag, Check, Share2, Camera, Package } from 'lucide-react';
+import { X, Star, ExternalLink, MessageSquare, Plus, AlertCircle, ShoppingBag, Check, Share2, Camera, Package, Mail } from 'lucide-react';
 import { Product, Review, User } from '../types';
 import { Tooltip } from './Tooltip';
 import { findGlossaryTerm } from '../data/glossary';
@@ -94,6 +94,7 @@ interface ProductModalProps {
   onOpenAuth: () => void;
   onSimulatePurchase: (productId: string) => boolean;
   onAddToCart: (product: Product) => void;
+  onRegisterStockAlert?: (productId: string, email: string) => void;
 }
 
 export default function ProductModal({
@@ -107,6 +108,7 @@ export default function ProductModal({
   onOpenAuth,
   onSimulatePurchase,
   onAddToCart,
+  onRegisterStockAlert,
 }: ProductModalProps): React.JSX.Element {
   const [newRating, setNewRating] = useState<number>(5);
   const [newComment, setNewComment] = useState<string>('');
@@ -117,6 +119,48 @@ export default function ProductModal({
   const [activeImageIndex, setActiveImageIndex] = useState<number>(0);
   const [copiedShare, setCopiedShare] = useState<boolean>(false);
   const [showMobileReviews, setShowMobileReviews] = useState<boolean>(false);
+
+  const [stockEmail, setStockEmail] = useState<string>(currentUser?.email || '');
+  const [isAlertRegistered, setIsAlertRegistered] = useState<boolean>(false);
+
+  React.useEffect(() => {
+    if (currentUser) {
+      setStockEmail(currentUser.email);
+    }
+  }, [currentUser]);
+
+  React.useEffect(() => {
+    try {
+      const alerts = JSON.parse(localStorage.getItem('tech_stock_alerts') || '[]');
+      const registered = alerts.some((a: any) => a.productId === product.id && a.email.toLowerCase() === stockEmail.toLowerCase());
+      setIsAlertRegistered(registered);
+    } catch {
+      setIsAlertRegistered(false);
+    }
+  }, [product, stockEmail]);
+
+  const handleRegisterStockAlert = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!stockEmail.trim()) return;
+    try {
+      const alerts = JSON.parse(localStorage.getItem('tech_stock_alerts') || '[]');
+      if (!alerts.some((a: any) => a.productId === product.id && a.email.toLowerCase() === stockEmail.toLowerCase())) {
+        alerts.push({
+          id: `alert-${Date.now()}`,
+          productId: product.id,
+          email: stockEmail.trim(),
+          productName: product.name,
+        });
+        localStorage.setItem('tech_stock_alerts', JSON.stringify(alerts));
+      }
+      setIsAlertRegistered(true);
+      if (onRegisterStockAlert) {
+        onRegisterStockAlert(product.id, stockEmail.trim());
+      }
+    } catch (err) {
+      console.error(err);
+    }
+  };
 
   const additionalPhotos = getAdditionalImages(product.id, product.image);
 
@@ -479,8 +523,55 @@ export default function ProductModal({
                   ) : (
                     <div className="flex flex-col sm:flex-row gap-3">
                       {product.stock === 0 ? (
-                        <div className="w-full py-4 bg-black border-2 border-border-subtle text-white font-black tracking-widest text-xs text-center uppercase select-none">
-                          PRODUTO ESGOTADO / INDISPONÍVEL
+                        <div className="w-full space-y-4">
+                          <div className="w-full py-4 bg-black border-2 border-border-subtle text-white font-black tracking-widest text-xs text-center uppercase select-none">
+                            PRODUTO ESGOTADO / INDISPONÍVEL
+                          </div>
+                          
+                          {/* Stock alert e-mail option */}
+                          <div className="p-4 bg-bg-nested border border-border-subtle space-y-3">
+                            <div className="flex items-center gap-2 text-text-main font-sans font-black text-[10px] tracking-widest uppercase">
+                              <Mail className="w-4 h-4 text-[#FF3E00]" />
+                              AVISE-ME POR E-MAIL QUANDO DISPONÍVEL
+                            </div>
+                            <p className="text-[10px] font-mono text-text-muted leading-relaxed uppercase">
+                              Cadastre o seu e-mail para receber um alerta de envio simulado instantâneo assim que reabastecermos este lote!
+                            </p>
+                            
+                            {isAlertRegistered ? (
+                              <div className="p-3 bg-[#FF3E00]/10 border border-[#FF3E00]/20 text-center space-y-1">
+                                <span className="text-[10px] font-black tracking-widest text-[#FF3E00] uppercase block">
+                                  ✓ ALERTA DE REABASTECIMENTO ATIVO
+                                </span>
+                                <span className="text-[9px] font-mono text-text-muted block truncate">
+                                  Destinatário: {stockEmail}
+                                </span>
+                              </div>
+                            ) : (
+                              <form onSubmit={handleRegisterStockAlert} className="space-y-2">
+                                <div className="space-y-1">
+                                  <label className="text-[8px] font-mono font-bold text-text-dim uppercase block">
+                                    E-MAIL DO DESTINATÁRIO *
+                                  </label>
+                                  <input
+                                    type="email"
+                                    required
+                                    value={stockEmail}
+                                    onChange={(e) => setStockEmail(e.target.value)}
+                                    placeholder="EX: SEU-EMAIL@DOMINIO.COM"
+                                    className="w-full bg-bg-input border border-border-subtle p-2.5 text-xs text-text-main focus:outline-none focus:border-[#FF3E00] font-mono rounded-none"
+                                  />
+                                </div>
+                                <button
+                                  type="submit"
+                                  id="btn-register-stock-alert"
+                                  className="w-full py-2 bg-text-main hover:bg-[#FF3E00] hover:text-white text-bg-main text-[9px] font-black tracking-widest uppercase transition-colors rounded-none cursor-pointer"
+                                >
+                                  ATIVAR ALERTA DE E-MAIL
+                                </button>
+                              </form>
+                            )}
+                          </div>
                         </div>
                       ) : (
                         <>

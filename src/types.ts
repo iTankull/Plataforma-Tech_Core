@@ -51,3 +51,29 @@ export interface Purchase {
   userId: string;
 }
 
+export interface StockAlert {
+  id: string;
+  productId: string;
+  email: string;
+  productName: string;
+}
+
+export interface InAppNotification {
+  id: string;
+  productId: string;
+  productName: string;
+  productImage: string;
+  message: string;
+  date: string;
+  read: boolean;
+}
+
+export interface SimulatedEmail {
+  to: string;
+  subject: string;
+  body: string;
+  date: string;
+  productName: string;
+  productImage: string;
+}
+
